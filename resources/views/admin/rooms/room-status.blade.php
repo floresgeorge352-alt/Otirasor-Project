@@ -3,167 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Room Status - Otirasor Beach</title>
+    <title>Room Status Overview - Otirasor Beach</title>
+    @vite(['resources/js/app.js'])
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f4f7fb; color: #333; }
+        .navbar { background: #064b93; color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar h2 { margin: 0; font-size: 22px; }
+        .navbar a { color: white; text-decoration: none; margin-left: 25px; font-size: 15px; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 25px; }
+        .back-button { display: inline-block; margin-bottom: 25px; background: #6c757d; color: white; text-decoration: none; padding: 10px 18px; border-radius: 6px; }
+        .back-button:hover { background: #555; }
+        .title { color: #064b93; margin-bottom: 25px; }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f7fb;
-            color: #333;
-        }
-
-        .navbar {
-            background: #064b93;
-            color: white;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar h2 {
-            margin: 0;
-            font-size: 22px;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 25px;
-            font-size: 15px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 25px;
-        }
-
-        .back-button {
-            display: inline-block;
-            margin-bottom: 25px;
-            background: #6c757d;
-            color: white;
-            text-decoration: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-        }
-
-        .back-button:hover {
-            background: #555;
-        }
-
-        .title {
-            color: #064b93;
-            margin-bottom: 25px;
-        }
-
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 35px;
-        }
-
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 35px; }
+        
         .summary-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-            text-align: center;
+            background: white; padding: 30px 25px; border-radius: 12px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            text-align: center; text-decoration: none; color: inherit; display: block;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            border: 2px solid transparent;
         }
+        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); }
+        
+        .summary-card.available-card:hover { border-color: #168a4a; }
+        .summary-card.cleaning-card:hover { border-color: #d97706; }
+        .summary-card.reserved-card:hover { border-color: #d68910; }
+        .summary-card.occupied-card:hover { border-color: #c0392b; }
+        
+        .summary-card h3 { margin-top: 0; color: #555; font-size: 18px; }
+        .number { font-size: 48px; font-weight: bold; margin: 15px 0; }
+        
+        .available-num { color: #168a4a; }
+        .cleaning-num { color: #d97706; }
+        .reserved-num { color: #d68910; }
+        .occupied-num { color: #c0392b; }
+        
+        .available-text { color: #168a4a; font-weight: bold; }
+        .cleaning-text { color: #d97706; font-weight: bold; }
+        .reserved-text { color: #d68910; font-weight: bold; }
+        .occupied-text { color: #c0392b; font-weight: bold; }
+        
+        .click-hint { font-size: 12px; color: #999; margin-top: 10px; font-style: italic; }
 
-        .summary-card h3 {
-            margin-top: 0;
-            color: #555;
-        }
-
-        .number {
-            font-size: 38px;
-            font-weight: bold;
-            color: #168a4a;
-            margin: 10px 0;
-        }
-
-        .section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 25px;
-        }
-
-        .section h2 {
-            color: #064b93;
-            margin-top: 0;
-        }
-
-        .room-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .room {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            background: #fafafa;
-        }
-
-        .room-name {
-            font-weight: bold;
-            font-size: 17px;
-            color: #064b93;
-        }
-
-        .available {
-            color: #168a4a;
-            font-weight: bold;
-        }
-
-        .reserved {
-            color: #d68910;
-            font-weight: bold;
-        }
-
-        .occupied {
-            color: #c0392b;
-            font-weight: bold;
-        }
-
-        .empty {
-            color: #777;
-            padding: 10px 0;
-        }
-
-        @media (max-width: 768px) {
-            .summary {
-                grid-template-columns: 1fr;
-            }
-
-            .navbar {
-                padding: 18px 20px;
-            }
-
-            .navbar a {
-                margin-left: 10px;
-            }
-        }
+        @media (max-width: 950px) { .summary { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .summary { grid-template-columns: 1fr; } }
     </style>
 </head>
-
 <body>
 
     <div class="navbar">
         <h2>Otirasor Beach and Resort - Admin</h2>
-
         <div>
             <a href="/admin/dashboard">Dashboard</a>
             <a href="/admin/bookings">Bookings</a>
@@ -171,218 +62,69 @@
         </div>
     </div>
 
-
     <div class="container">
-
-        <a href="/admin/dashboard" class="back-button">
-            ← Back to Dashboard
-        </a>
-
-        <h1 class="title">Room Status</h1>
-
-
-        <!-- SUMMARY -->
+        <a href="/admin/dashboard" class="back-button">← Back to Dashboard</a>
+        <h1 class="title">Room Status Overview</h1>
 
         <div class="summary">
-
-            <div class="summary-card">
+            <a href="/admin/rooms/available" class="summary-card available-card">
                 <h3>Available Rooms</h3>
+                <div class="number available-num">{{ count($availableRooms) }}</div>
+                <p class="available-text">Currently Available</p>
+                <div class="click-hint">Click to view details →</div>
+            </a>
 
-                <div class="number">
-                    {{ count($availableRooms) }}
-                </div>
+            <a href="/admin/rooms/needs-cleaning" class="summary-card cleaning-card">
+                <h3>Needs Cleaning</h3>
+                <div class="number cleaning-num">{{ count($needsCleaningRooms) }}</div>
+                <p class="cleaning-text">For Housekeeping</p>
+                <div class="click-hint">Click to view details →</div>
+            </a>
 
-                <p class="available">
-                    Currently Available
-                </p>
-            </div>
-
-
-            <div class="summary-card">
+            <a href="/admin/rooms/reserved" class="summary-card reserved-card">
                 <h3>Reserved Rooms</h3>
+                <div class="number reserved-num">{{ count($reservedRooms) }}</div>
+                <p class="reserved-text">Upcoming Reservations</p>
+                <div class="click-hint">Click to view details →</div>
+            </a>
 
-                <div class="number">
-                    {{ count($reservedRooms) }}
-                </div>
-
-                <p class="reserved">
-                    Upcoming Reservations
-                </p>
-            </div>
-
-
-            <div class="summary-card">
+            <a href="/admin/rooms/occupied" class="summary-card occupied-card">
                 <h3>Occupied Rooms</h3>
-
-                <div class="number">
-                    {{ count($occupiedRooms) }}
-                </div>
-
-                <p class="occupied">
-                    Currently Occupied
-                </p>
-            </div>
-
+                <div class="number occupied-num">{{ count($occupiedRooms) }}</div>
+                <p class="occupied-text">Currently Occupied</p>
+                <div class="click-hint">Click to view details →</div>
+            </a>
         </div>
-
-
-        <!-- AVAILABLE ROOMS -->
-
-        <div class="section">
-
-            <h2>Available Rooms</h2>
-
-            @if(count($availableRooms) > 0)
-
-                <div class="room-list">
-
-                    @foreach($availableRooms as $room)
-
-                        <div class="room">
-
-                            <div class="room-name">
-                                {{ $room }}
-                            </div>
-
-                            <p class="available">
-                                ✓ Available
-                            </p>
-
-                        </div>
-
-                    @endforeach
-
-                </div>
-
-            @else
-
-                <p class="empty">
-                    No rooms are currently available.
-                </p>
-
-            @endif
-
-        </div>
-
-
-        <!-- RESERVED ROOMS -->
-
-        <div class="section">
-
-            <h2>Reserved Rooms</h2>
-
-            @if(count($reservedRooms) > 0)
-
-                <div class="room-list">
-
-                    @foreach($reservedRooms as $room)
-
-                        <div class="room">
-
-                            <div class="room-name">
-                                {{ $room['room'] }}
-                            </div>
-
-                            <p class="reserved">
-                                Reserved
-                            </p>
-
-                            <p>
-                                <strong>Guest:</strong>
-                                {{ $room['guest_name'] }}
-                            </p>
-
-                            <p>
-                                <strong>Check-in:</strong>
-                                {{ $room['check_in'] }}
-                            </p>
-
-                            <p>
-                                <strong>Check-out:</strong>
-                                {{ $room['check_out'] }}
-                            </p>
-
-                            <p>
-                                <strong>Status:</strong>
-                                {{ $room['status'] }}
-                            </p>
-
-                        </div>
-
-                    @endforeach
-
-                </div>
-
-            @else
-
-                <p class="empty">
-                    No reserved rooms.
-                </p>
-
-            @endif
-
-        </div>
-
-
-        <!-- OCCUPIED ROOMS -->
-
-        <div class="section">
-
-            <h2>Occupied Rooms</h2>
-
-            @if(count($occupiedRooms) > 0)
-
-                <div class="room-list">
-
-                    @foreach($occupiedRooms as $room)
-
-                        <div class="room">
-
-                            <div class="room-name">
-                                {{ $room['room'] }}
-                            </div>
-
-                            <p class="occupied">
-                                Currently Occupied
-                            </p>
-
-                            <p>
-                                <strong>Guest:</strong>
-                                {{ $room['guest_name'] }}
-                            </p>
-
-                            <p>
-                                <strong>Check-in:</strong>
-                                {{ $room['check_in'] }}
-                            </p>
-
-                            <p>
-                                <strong>Check-out:</strong>
-                                {{ $room['check_out'] }}
-                            </p>
-
-                            <p>
-                                <strong>Status:</strong>
-                                {{ $room['status'] }}
-                            </p>
-
-                        </div>
-
-                    @endforeach
-
-                </div>
-
-            @else
-
-                <p class="empty">
-                    No occupied rooms.
-                </p>
-
-            @endif
-
-        </div>
-
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.Echo) {
+            console.warn('Echo is not loaded.');
+            return;
+        }
+
+        // Makinig sa room status updates (Check-in, Check-out, Mark Cleaned)
+        window.Echo.channel('admin.rooms')
+            .listen('RoomStatusUpdated', (e) => {
+                console.log('Room Status Updated:', e);
+
+                // Optional: Mag-show ng toast notification
+                if (window.showToast) {
+                    window.showToast(
+                        'Room Status Updated',
+                        `Booking #${e.booking_id} status has changed to ${e.status}.`,
+                        'info'
+                    );
+                }
+
+                // Auto-reload ang page after 1.5 seconds para lumabas ang bagong bilang
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            });
+    });
+    </script>
 
 </body>
 </html>

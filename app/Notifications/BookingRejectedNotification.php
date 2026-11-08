@@ -4,9 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Booking;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class BookingRejectedNotification extends Notification
+class BookingRejectedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -17,7 +19,7 @@ class BookingRejectedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray(object $notifiable): array
@@ -30,5 +32,17 @@ class BookingRejectedNotification extends Notification
             'check_out' => $this->booking->check_out,
             'message' => 'Booking #' . $this->booking->id . ' has been rejected.',
         ];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'booking_id' => $this->booking->id,
+            'guest_name' => $this->booking->guest_name,
+            'number_of_guests' => $this->booking->number_of_guests,
+            'check_in' => $this->booking->check_in,
+            'check_out' => $this->booking->check_out,
+            'message' => 'Booking #' . $this->booking->id . ' has been rejected.',
+        ]);
     }
 }

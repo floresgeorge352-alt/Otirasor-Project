@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 use App\Models\Accommodation;
 
@@ -10,345 +11,84 @@ class AccommodationController extends Controller
 {
     public function index(Request $request)
     {
-        $checkIn = $request->query(
-            'check_in',
-            ''
-        );
+        $checkIn = $request->query('check_in', '');
+        $checkOut = $request->query('check_out', '');
 
-        $checkOut = $request->query(
-            'check_out',
-            ''
-        );
+        if ($checkIn && $checkOut && strtotime($checkOut) <= strtotime($checkIn)) {
+            $checkIn = '';
+            $checkOut = '';
+        }
 
-        $currentCategory = $request->query(
-            'category',
-            ''
-        );
+        $currentCategory = $request->query('category', '');
+        $roomType = $request->query('room_type', 'day_use');
+        $search = trim($request->query('search', ''));
+        $capacity = $request->query('capacity', '');
 
-        $roomType = $request->query(
-            'room_type',
-            'day_use'
-        );
-
-        $search = trim(
-            $request->query(
-                'search',
-                ''
-            )
-        );
-
-        // =====================================================
-        // COTTAGE CAPACITY FILTER
-        // =====================================================
-
-        $capacity = $request->query(
-            'capacity',
-            ''
-        );
-
-
-        // =====================================================
-        // ACCOMMODATION QUERY
-        // =====================================================
-
-        $query = Accommodation::query()
-            ->orderBy('type')
-            ->orderBy('name');
-
-
-        // =====================================================
-        // CATEGORY FILTER
-        // =====================================================
+        $query = Accommodation::query()->orderBy('type')->orderBy('name');
 
         if ($currentCategory === 'rooms') {
-
-            $query->where(
-                'type',
-                'Room'
-            );
-
-
-            // -------------------------------------------------
-            // DAY USE ROOMS
-            // -------------------------------------------------
-
-            if ($roomType === 'day_use') {
-
-                $query->where(
-                    'name',
-                    'like',
-                    '%- Day Use'
-                );
-
-            }
-
-
-            // -------------------------------------------------
-            // OVERNIGHT ROOMS
-            // -------------------------------------------------
-
-            if ($roomType === 'overnight') {
-
-                $query->where(
-                    'name',
-                    'like',
-                    '%- Overnight'
-                );
-
-            }
-
+            $query->where('type', 'Room');
+            if ($roomType === 'day_use') $query->where('room_type', 'day_use');
+            if ($roomType === 'overnight') $query->where('room_type', 'overnight');
+        } elseif ($currentCategory === 'cottages') {
+            $query->where('type', 'Cottage');
+            if ($capacity !== '') $query->where('capacity', $capacity);
+            $query->orderBy('capacity')->orderBy('name');
+        } elseif ($currentCategory === 'halls') {
+            $query->where('type', 'Function Hall');
         }
-
-
-        // =====================================================
-        // COTTAGES
-        // =====================================================
-
-        elseif ($currentCategory === 'cottages') {
-
-            $query->where(
-                'type',
-                'Cottage'
-            );
-
-
-            // -------------------------------------------------
-            // FILTER BY CAPACITY
-            // Example:
-            // 15 Persons
-            // 20 Persons
-            // -------------------------------------------------
-
-            if ($capacity !== '') {
-
-                $query->where(
-                    'capacity',
-                    $capacity
-                );
-
-            }
-
-
-            // -------------------------------------------------
-            // SORT COTTAGES BY CAPACITY
-            // Smaller capacity first
-            // Then sort by cottage name
-            // -------------------------------------------------
-
-            $query->orderBy(
-                'capacity'
-            )
-            ->orderBy(
-                'name'
-            );
-
-        }
-
-
-        // =====================================================
-        // FUNCTION HALLS
-        // =====================================================
-
-        elseif ($currentCategory === 'halls') {
-
-            $query->where(
-                'type',
-                'Function Hall'
-            );
-
-        }
-
-
-        // =====================================================
-        // SEARCH
-        // =====================================================
 
         if ($search !== '') {
-
             $query->where(function ($q) use ($search) {
-
-                $q->where(
-                    'name',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'description',
-                    'like',
-                    '%' . $search . '%'
-                );
-
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
             });
-
         }
 
+        $databaseAccommodations = $query->paginate(12)->withQueryString();
 
-        // =====================================================
-        // PAGINATION
-        // =====================================================
+        $bookedAccommodationIds = [];
+        
+        if ($checkIn && $checkOut) {
+            $bookedAccommodationIds = DB::table('booking_accommodation')
+                ->join('bookings', 'bookings.id', '=', 'booking_accommodation.booking_id')
+                ->whereIn('bookings.status', ['Pending', 'Confirmed'])
+                ->where(function($q) use ($checkIn, $checkOut) {
+                    $q->where('bookings.check_in', '<', $checkOut)
+                      ->where('bookings.check_out', '>', $checkIn);
+                })
+                ->pluck('booking_accommodation.accommodation_id')
+                ->unique()
+                ->toArray();
+        }
 
-        $databaseAccommodations = $query
-            ->paginate(12)
-            ->withQueryString();
-
-
-        // =====================================================
-        // CHECK AVAILABILITY
-        // =====================================================
-
-        $accommodations =
-            $databaseAccommodations->through(
-                function ($accommodation) use (
-                    $checkIn,
-                    $checkOut
-                ) {
-
-                    $available =
-                        $this->isAvailable(
-                            $accommodation->name,
-                            $checkIn,
-                            $checkOut,
-                            $accommodation->status
-                        );
-
-
-                    return [
-
-                        'id' =>
-                            $accommodation->id,
-
-                        'name' =>
-                            $accommodation->name,
-
-                        'description' =>
-                            $accommodation->description,
-
-                        'price' =>
-                            $accommodation->price,
-
-                        'capacity' =>
-                            $accommodation->capacity,
-
-                        'type' =>
-                            $accommodation->type,
-
-                        'image' =>
-                            $accommodation->image,
-
-                        'available' =>
-                            $available,
-
-                    ];
-
+        $accommodations = $databaseAccommodations->through(
+            function ($accommodation) use ($bookedAccommodationIds) {
+                if ($accommodation->status !== 'available') {
+                    $available = false;
+                } else {
+                    $available = !in_array($accommodation->id, $bookedAccommodationIds);
                 }
-            );
 
-
-        // =====================================================
-        // RETURN VIEW
-        // =====================================================
-
-        return view(
-            'accommodations',
-            compact(
-                'accommodations',
-                'checkIn',
-                'checkOut'
-            )
+                return [
+                    'id' => $accommodation->id,
+                    'name' => $accommodation->name,
+                    'description' => $accommodation->description,
+                    'amenities' => $accommodation->amenities, // <-- Idinagdag
+                    'price' => $accommodation->price,
+                    'capacity' => $accommodation->capacity,
+                    'type' => $accommodation->type,
+                    'image' => $accommodation->image,
+                    'available' => $available,
+                    'status' => $accommodation->status,
+                ];
+            }
         );
-    }
 
-
-    // =========================================================
-    // CHECK ACCOMMODATION AVAILABILITY
-    // =========================================================
-
-    private function isAvailable(
-        $accommodation,
-        $checkIn,
-        $checkOut,
-        $status
-    ) {
-
-        // -----------------------------------------------------
-        // MANUALLY UNAVAILABLE
-        // -----------------------------------------------------
-
-        if ($status !== 'available') {
-
-            return false;
-
-        }
-
-
-        // -----------------------------------------------------
-        // NO DATES SELECTED
-        // -----------------------------------------------------
-
-        if (
-            !$checkIn ||
-            !$checkOut
-        ) {
-
-            return true;
-
-        }
-
-
-        // -----------------------------------------------------
-        // CHECK EXISTING BOOKINGS
-        // -----------------------------------------------------
-
-        $conflict = Booking::whereIn(
-            'status',
-            [
-                'Pending',
-                'Confirmed'
-            ]
-        )
-        ->where(
-            function ($query) use (
-                $accommodation
-            ) {
-
-                $query->whereRaw(
-                    "FIND_IN_SET(
-                        ?,
-                        REPLACE(
-                            accommodations,
-                            ', ',
-                            ','
-                        )
-                    )",
-                    [
-                        $accommodation
-                    ]
-                );
-
-            }
-        )
-        ->where(
-            function ($query) use (
-                $checkIn,
-                $checkOut
-            ) {
-
-                $query->where(
-                    'check_in',
-                    '<',
-                    $checkOut
-                )
-                ->where(
-                    'check_out',
-                    '>',
-                    $checkIn
-                );
-
-            }
-        )
-        ->exists();
-
-
-        return !$conflict;
+        return view('accommodations', compact(
+            'accommodations',
+            'checkIn',
+            'checkOut'
+        ));
     }
 }

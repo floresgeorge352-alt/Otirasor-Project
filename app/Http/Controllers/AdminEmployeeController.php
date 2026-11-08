@@ -216,7 +216,7 @@ class AdminEmployeeController extends Controller
         $employee->work_days = $workDays;
 
         // UPDATE PASSWORD ONLY IF PROVIDED
-        if ($request->filled('password')) {
+        if (!empty($validated['password'])) {
             $employee->password = Hash::make(
                 $validated['password']
             );

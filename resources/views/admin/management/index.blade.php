@@ -362,6 +362,11 @@
         }
 
 
+        .gallery-card .card-icon {
+            background: #faf5ff;
+        }
+
+
         /* =========================================
            MOBILE
         ========================================== */
@@ -656,6 +661,42 @@
                     class="btn"
                 >
                     View Notifications →
+                </a>
+
+            </div>
+
+
+            <!-- =====================================
+                 GALLERY (NEW CARD)
+            ====================================== -->
+
+            <div class="card gallery-card">
+
+                <div>
+
+                    <div class="card-icon">
+                        🖼️
+                    </div>
+
+
+                    <h3>
+                        Manage Gallery
+                    </h3>
+
+
+                    <p>
+                        Upload, view, and delete
+                        photos for the customer gallery.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="{{ route('admin.gallery.index') }}"
+                    class="btn"
+                >
+                    Manage Gallery →
                 </a>
 
             </div>

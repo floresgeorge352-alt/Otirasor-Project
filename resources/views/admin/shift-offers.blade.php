@@ -123,6 +123,24 @@
             font-weight: bold;
         }
 
+        /* BAGONG DAGDAG — Visual indicator para sa bagong response */
+        .response-new {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+
+        .badge-new {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
         .actions {
             display: flex;
             gap: 7px;
@@ -230,9 +248,14 @@
                         </td>
 
                         <td>
-                            <span class="response">
+                            {{-- BAGONG DAGDAG: highlight kung bagong response --}}
+                            <span class="response @if($request->employee_response !== 'Pending' && $request->status === 'Pending') response-new @endif">
                                 {{ $request->employee_response ?? 'Pending' }}
                             </span>
+
+                            @if($request->employee_response !== 'Pending' && $request->status === 'Pending')
+                                <span class="badge-new">BAGO</span>
+                            @endif
                         </td>
 
                         <td>

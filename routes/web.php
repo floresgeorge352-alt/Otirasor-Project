@@ -13,8 +13,12 @@ use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminEmployeeController;
 use App\Http\Controllers\ExtraShiftRequestController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AdminGalleryController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\PublicReviewController;
+use App\Http\Controllers\AdminPromotionController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,25 +30,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-/*
-|--------------------------------------------------------------------------
-| About
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/about', function () {
     return view('about');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Contact
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/contact', function () {
     return view('contact');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Gallery & Reviews (Customer Side)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/gallery', [GalleryController::class, 'publicIndex'])->name('public.gallery');
+Route::get('/reviews', [PublicReviewController::class, 'index'])->name('public.reviews');
 
 /*
 |--------------------------------------------------------------------------
@@ -66,10 +67,27 @@ Route::get(
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/booking', [BookingController::class, 'create']);
-
     Route::post('/booking', [BookingController::class, 'store']);
 
+    // === NEW: Promo Code Check Route ===
+    Route::get('/check-promo', [BookingController::class, 'checkPromo']);
+    // ===================================
+
+    Route::get(
+        '/booking/confirmation/{booking}',
+        [BookingController::class, 'confirmation']
+    )->name('booking.confirmation');
+
     Route::get('/my-bookings', [CustomerBookingController::class, 'index']);
+
+    // === NEW: My Requests Page ===
+    Route::get('/my-requests', [\App\Http\Controllers\CustomerRequestController::class, 'index'])->name('customer.requests');
+    // =============================
+
+    // === REWARDS (CUSTOMER) ===
+    Route::get('/my-rewards', [\App\Http\Controllers\RewardController::class, 'index'])->name('customer.rewards.index');
+    Route::post('/my-bookings/{booking}/apply-rewards', [\App\Http\Controllers\RewardController::class, 'apply'])->name('customer.rewards.apply');
+    // =========================
 
     Route::post(
         '/my-bookings/{booking}/cancel',
@@ -81,9 +99,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [BookingController::class, 'receipt']
     );
 
+    Route::get(
+        '/my-bookings/{booking}/invoice',
+        [BookingController::class, 'invoice']
+    );
+
     Route::post(
         '/my-bookings/{booking}/request-cancellation',
         [BookingController::class, 'requestCancellation']
+    );
+
+    // === NEW: Refund Request Route ===
+    Route::post(
+        '/my-bookings/{booking}/request-refund',
+        [CustomerBookingController::class, 'requestRefund']
+    )->name('customer.bookings.request-refund');
+    // =================================
+
+    Route::post(
+        '/my-bookings/{booking}/review',
+        [ReviewController::class, 'store']
+    )->name('reviews.store');
+
+    Route::get(
+        '/notifications',
+        [CustomerBookingController::class, 'notifications']
+    )->name('customer.notifications');
+
+    Route::get(
+        '/notifications/{notification}/open',
+        [CustomerBookingController::class, 'openNotification']
     );
 });
 
@@ -130,6 +175,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminDashboardController::class, 'index']
     )->name('admin.dashboard');
 
+    Route::get(
+        '/admin/analytics',
+        [AdminDashboardController::class, 'analytics']
+    )->name('admin.analytics');
+
     Route::get('/admin/management', function () {
         return view('admin.management.index');
     });
@@ -168,6 +218,50 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminReportController::class, 'index']
     );
 
+    // === BAGONG PROMOTION ROUTES ===
+    Route::get('/admin/promotions', [AdminPromotionController::class, 'index']);
+    Route::post('/admin/promotions', [AdminPromotionController::class, 'store']);
+    Route::post('/admin/promotions/{promotion}/toggle', [AdminPromotionController::class, 'toggle']);
+    Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy']);
+    // ===============================
+
+    // === TRANSACTION RECORDS ===
+    Route::get('/admin/transactions', [\App\Http\Controllers\AdminTransactionController::class, 'index'])->name('admin.transactions');
+    Route::get('/admin/transactions/export', [\App\Http\Controllers\AdminTransactionController::class, 'exportCsv'])->name('admin.transactions.export');
+    Route::get('/admin/transactions/export-pdf', [\App\Http\Controllers\AdminTransactionController::class, 'exportPdf'])->name('admin.transactions.export-pdf');
+    // ===========================
+
+    // === REWARDS (ADMIN) ===
+    Route::get('/admin/rewards', [\App\Http\Controllers\AdminRewardController::class, 'index'])->name('admin.rewards.index');
+    Route::post('/admin/rewards/{user}/adjust', [\App\Http\Controllers\AdminRewardController::class, 'adjust'])->name('admin.rewards.adjust');
+    Route::get('/admin/rewards/{user}/history', [\App\Http\Controllers\AdminRewardController::class, 'history'])->name('admin.rewards.history');
+    // ======================
+
+    Route::get(
+        '/admin/payments',
+        [AdminReportController::class, 'payments']
+    )->name('admin.payments');
+
+    Route::get(
+        '/admin/reviews',
+        [AdminReportController::class, 'reviews']
+    )->name('admin.reviews');
+
+    Route::get(
+        '/admin/gallery',
+        [AdminGalleryController::class, 'index']
+    )->name('admin.gallery.index');
+
+    Route::post(
+        '/admin/gallery',
+        [AdminGalleryController::class, 'store']
+    )->name('admin.gallery.store');
+
+    Route::delete(
+        '/admin/gallery/{gallery}',
+        [AdminGalleryController::class, 'destroy']
+    )->name('admin.gallery.destroy');
+
     Route::resource(
         '/admin/accommodations',
         AdminAccommodationController::class
@@ -189,15 +283,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminBookingController::class, 'reject']
     );
 
+    // =========================================================
+    // CANCELLATION APPROVAL (FIXED — now on AdminBookingController)
+    // =========================================================
     Route::post(
         '/admin/bookings/{booking}/approve-cancellation',
-        [BookingController::class, 'approveCancellation']
-    );
+        [AdminBookingController::class, 'approveCancellation']
+    )->name('admin.bookings.approve-cancellation');
 
     Route::post(
         '/admin/bookings/{booking}/reject-cancellation',
-        [BookingController::class, 'rejectCancellation']
-    );
+        [AdminBookingController::class, 'rejectCancellation']
+    )->name('admin.bookings.reject-cancellation');
+    // =========================================================
 
     Route::post(
         '/admin/bookings/{booking}/verify-payment',
@@ -209,9 +307,56 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminBookingController::class, 'rejectPayment']
     );
 
+    Route::post(
+        '/admin/bookings/{booking}/refund',
+        [AdminBookingController::class, 'refund']
+    )->name('admin.bookings.refund');
+
+    // === NEW: ADMIN REFUND APPROVAL ROUTES ===
+    Route::post(
+        '/admin/bookings/{booking}/approve-refund',
+        [AdminBookingController::class, 'approveRefund']
+    )->name('admin.bookings.approve-refund');
+
+    Route::post(
+        '/admin/bookings/{booking}/reject-refund',
+        [AdminBookingController::class, 'rejectRefund']
+    )->name('admin.bookings.reject-refund');
+    // ==========================================
+
+    Route::post(
+        '/admin/bookings/{booking}/check-in',
+        [AdminBookingController::class, 'checkIn']
+    )->name('admin.bookings.checkIn');
+
+    Route::post(
+        '/admin/bookings/{booking}/check-out',
+        [AdminBookingController::class, 'checkOut']
+    )->name('admin.bookings.checkOut');
+
+    Route::post(
+        '/admin/bookings/{booking}/mark-cleaned',
+        [AdminBookingController::class, 'markCleaned']
+    )->name('admin.bookings.markCleaned');
+
+    Route::post(
+        '/admin/bookings/{booking}/complete',
+        [AdminBookingController::class, 'complete']
+    )->name('admin.bookings.complete');
+
+    Route::post(
+        '/admin/bookings/{booking}/no-show',
+        [AdminBookingController::class, 'noShow']
+    )->name('admin.bookings.noShow');
+
     Route::get(
         '/admin/rooms/available',
         [AdminRoomController::class, 'available']
+    );
+
+    Route::get(
+        '/admin/rooms/needs-cleaning',
+        [AdminRoomController::class, 'needsCleaning']
     );
 
     Route::get(
@@ -229,11 +374,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminRoomController::class, 'status']
     );
 
-    /*
-    |--------------------------------------------------------------------------
-    | Employee Management
-    |--------------------------------------------------------------------------
-    */
+    Route::post(
+        '/admin/room/{room}/mark-cleaned',
+        [AdminRoomController::class, 'markCleaned']
+    )->name('admin.rooms.mark-cleaned');
 
     Route::get(
         '/admin/employees',
@@ -260,12 +404,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminEmployeeController::class, 'update']
     )->name('admin.employees.update');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Extra Shift Requests - Admin
-    |--------------------------------------------------------------------------
-    */
-
     Route::get(
         '/admin/employee-shift-requests',
         [ExtraShiftRequestController::class, 'adminEmployeeRequests']
@@ -291,16 +429,36 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [ExtraShiftRequestController::class, 'reject']
     )->name('admin.extra-shift-requests.reject');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Employee Attendance - Admin View
-    |--------------------------------------------------------------------------
-    */
-
     Route::get(
         '/admin/attendance',
         [AdminAttendanceController::class, 'index']
     )->name('admin.attendance.index');
+
+    Route::get(
+        '/admin/attendance/download-csv',
+        [AdminAttendanceController::class, 'downloadCsv']
+    )->name('admin.attendance.download-csv');
+
+    Route::get(
+        '/admin/attendance/download-pdf',
+        [AdminAttendanceController::class, 'downloadPdf']
+    )->name('admin.attendance.download-pdf');
+
+    // === ADMIN CORRECTION ROUTES ===
+    Route::get(
+        '/admin/attendance/corrections',
+        [AdminAttendanceController::class, 'corrections']
+    )->name('admin.attendance.corrections');
+
+    Route::post(
+        '/admin/attendance/corrections/{correction}/approve',
+        [AdminAttendanceController::class, 'approveCorrection']
+    )->name('admin.attendance.corrections.approve');
+
+    Route::post(
+        '/admin/attendance/corrections/{correction}/reject',
+        [AdminAttendanceController::class, 'rejectCorrection']
+    )->name('admin.attendance.corrections.reject');
 
     Route::post(
         '/admin/attendance/{attendance}/approve-overtime',
@@ -357,6 +515,21 @@ Route::middleware(['auth'])->group(function () {
     )->name('employee.attendance.time-out');
 
     Route::get(
+        '/employee/my-attendance',
+        [AttendanceController::class, 'myAttendance']
+    )->name('employee.my-attendance');
+
+    Route::get(
+        '/employee/my-attendance/download-csv',
+        [AttendanceController::class, 'downloadMyCsv']
+    )->name('employee.my-attendance.download-csv');
+
+    Route::post(
+        '/employee/my-attendance/correction',
+        [AttendanceController::class, 'storeCorrection']
+    )->name('employee.my-attendance.correction');
+
+    Route::get(
         '/employee/my-shift-requests',
         [ExtraShiftRequestController::class, 'employeeMyRequests']
     )->name('employee.extra-shift-requests.index');
@@ -375,26 +548,16 @@ Route::middleware(['auth'])->group(function () {
         '/employee/extra-shift-requests/{extraShiftRequest}/respond',
         [ExtraShiftRequestController::class, 'respond']
     )->name('employee.extra-shift-requests.respond');
-});
 
-/*
-|--------------------------------------------------------------------------
-| Test Email
-|--------------------------------------------------------------------------
-*/
+    Route::get(
+        '/employee/notifications',
+        [ExtraShiftRequestController::class, 'notifications']
+    )->name('employee.notifications');
 
-Route::get('/test-email', function () {
-
-    Mail::raw(
-        'Test email from Otirasor Beach and Resort.',
-        function ($message) {
-            $message
-                ->to('georgeflores352@gmail.com')
-                ->subject('Otirasor Email Test');
-        }
+    Route::get(
+        '/employee/notifications/{notification}/open',
+        [ExtraShiftRequestController::class, 'openNotification']
     );
-
-    return 'Test email sent!';
 });
 
 /*
