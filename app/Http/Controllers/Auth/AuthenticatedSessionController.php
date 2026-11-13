@@ -16,37 +16,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): View
     {
-        /*
-        |--------------------------------------------------------------------------
-        | ADMIN LOGIN
-        |--------------------------------------------------------------------------
-        */
-
         if ($request->is('admin/login')) {
             return view('auth.admin-login');
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | EMPLOYEE LOGIN
-        |--------------------------------------------------------------------------
-        */
 
         if ($request->is('employee/login')) {
             return view('auth.employee-login');
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CUSTOMER LOGIN
-        |--------------------------------------------------------------------------
-        */
-
         return view('auth.login');
     }
-
 
     /**
      * Handle customer login.
@@ -55,37 +34,27 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BLOCK ADMIN AND EMPLOYEE ACCOUNTS
-        |--------------------------------------------------------------------------
-        */
+        // 2FA CHECK PARA SA CUSTOMER
+        if (auth()->user()->two_factor_secret) {
+            $userId = auth()->id();
+            Auth::guard('web')->logout();
+            $request->session()->put('login.id', $userId);
+            $request->session()->put('url.intended', '/my-bookings'); // <-- PALITAN ITO
+            return redirect('/two-factor-challenge');
+        }
 
         if (in_array(auth()->user()->role, ['admin', 'employee'], true)) {
-
             Auth::guard('web')->logout();
-
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors([
-                    'email' =>
-                        'This account is not authorized for the Customer Portal.',
+                    'email' => 'This account is not authorized for the Customer Portal.',
                 ]);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CUSTOMER ACCOUNT
-        |--------------------------------------------------------------------------
-        */
-
         $request->session()->regenerate();
-
-        return redirect()->intended('/dashboard');
+        return redirect()->intended('/my-bookings'); // <-- PALITAN ITO
     }
-
 
     /**
      * Handle admin login.
@@ -94,30 +63,27 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK ADMIN ROLE
-        |--------------------------------------------------------------------------
-        */
-
         if (auth()->user()->role !== 'admin') {
-
             Auth::guard('web')->logout();
-
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors([
-                    'email' =>
-                        'This account is not authorized for the Admin Portal.',
+                    'email' => 'This account is not authorized for the Admin Portal.',
                 ]);
         }
 
-        $request->session()->regenerate();
+        // 2FA CHECK PARA SA ADMIN
+        if (auth()->user()->two_factor_secret) {
+            $userId = auth()->id();
+            Auth::guard('web')->logout();
+            $request->session()->put('login.id', $userId);
+            $request->session()->put('url.intended', '/admin/dashboard');
+            return redirect('/two-factor-challenge');
+        }
 
+        $request->session()->regenerate();
         return redirect('/admin/dashboard');
     }
-
 
     /**
      * Handle employee login.
@@ -126,30 +92,27 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK EMPLOYEE ROLE
-        |--------------------------------------------------------------------------
-        */
-
         if (auth()->user()->role !== 'employee') {
-
             Auth::guard('web')->logout();
-
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors([
-                    'email' =>
-                        'This account is not authorized for the Employee Portal.',
+                    'email' => 'This account is not authorized for the Employee Portal.',
                 ]);
         }
 
-        $request->session()->regenerate();
+        // 2FA CHECK PARA SA EMPLOYEE
+        if (auth()->user()->two_factor_secret) {
+            $userId = auth()->id();
+            Auth::guard('web')->logout();
+            $request->session()->put('login.id', $userId);
+            $request->session()->put('url.intended', '/employee/dashboard');
+            return redirect('/two-factor-challenge');
+        }
 
+        $request->session()->regenerate();
         return redirect('/employee/dashboard');
     }
-
 
     /**
      * Destroy an authenticated session.
@@ -157,9 +120,7 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

@@ -1,190 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Otirasor Beach and Resort</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: Arial, sans-serif; background: #f4fbfd; color: #333; }
+        body { font-family: 'Poppins', sans-serif; background: #f4fbfd; color: #333; overflow-x: hidden; }
 
-        /* =====================================================
-           NAVIGATION
-           ===================================================== */
-        nav {
-            background: rgba(2, 62, 138, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 12px 50px;
+        /* HERO SECTION (Full Screen) */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            min-height: 700px;
+            background: linear-gradient(rgba(0, 20, 40, 0.5), rgba(0, 50, 100, 0.7)), 
+                        url('{{ asset('images/Home-hero.jpeg.jpg') }}?v={{ filemtime(public_path('images/Home-hero.jpeg.jpg')) }}') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 8%;
+            color: white;
+        }
+
+        /* NAVIGATION BAR (Floating Glass) */
+        .navbar {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        .brand {
+        .navbar .brand {
             display: flex;
             align-items: center;
             gap: 12px;
-            color: white;
-            font-size: 23px;
-            font-weight: bold;
-            font-family: 'Montserrat', sans-serif;
         }
 
-        .brand img {
-            width: 50px;
-            height: 50px;
+        .navbar .brand img {
+            height: 45px;
+            width: 45px;
             object-fit: contain;
-            border-radius: 50%;
             background: white;
-            border: 2px solid white;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+            border-radius: 50%;
+            padding: 2px;
         }
 
-        .brand span { white-space: nowrap; }
+        .navbar .brand-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+            color: white;
+        }
 
         .nav-links {
             display: flex;
+            gap: 20px;
             align-items: center;
-            gap: 8px;
         }
 
-        nav a, .logout-btn {
+        .nav-links a {
             color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 500;
-            font-family: 'Poppins', sans-serif;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            background: transparent;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #fbbf24;
+        }
+
+        .nav-links a.active-link {
+            color: white;
+            font-weight: 700;
+        }
+
+        .btn-nav {
+            background: #fbbf24;
+            color: #111827;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
             border: none;
             cursor: pointer;
         }
 
-        nav a:hover, .logout-btn:hover {
-            color: white;
+        .btn-nav:hover {
+            background: #f59e0b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+        }
+
+        /* HERO CONTENT */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin-top: 80px;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .location-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
         }
 
-        nav a.active-link {
-            color: white;
-            background: #0077b6;
-            box-shadow: 0 2px 10px rgba(0, 119, 182, 0.4);
-        }
-
-        /* =====================================================
-           HERO
-           ===================================================== */
-        .hero {
-            min-height: 650px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 60px 20px;
-            background-image: linear-gradient(rgba(0, 50, 80, 0.20), rgba(0, 100, 150, 0.25)), url('{{ asset('images/Home-hero.jpeg.jpg') }}?v={{ filemtime(public_path('images/Home-hero.jpeg.jpg')) }}');
-            background-size: 125%;
-            background-position: center center;
-            background-repeat: no-repeat;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before, .hero::after {
-            content: none !important;
-            display: none !important;
-        }
-
-        .hero-content {
-            max-width: 900px;
-            width: 100%;
-            position: relative;
-            z-index: 2;
-            padding: 20px;
-        }
-
-        .hero-logo {
-            width: 115px;
-            height: 115px;
-            object-fit: contain;
-            border-radius: 50%;
-            background: white;
-            padding: 5px;
-            margin-bottom: 22px;
-            box-shadow: 0 7px 22px rgba(0, 0, 0, 0.25);
-            border: 3px solid rgba(255, 255, 255, 0.95);
-        }
-
-        .hero h1 {
-            font-size: 52px;
-            line-height: 1.12;
-            margin-bottom: 15px;
+        .hero-content h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 75px;
+            line-height: 1.1;
             font-weight: 800;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+            margin-bottom: 25px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .hero h2 {
-            font-size: 24px;
-            font-weight: normal;
-            margin-bottom: 15px;
-            text-shadow: 0 2px 7px rgba(0, 0, 0, 0.50);
+        .hero-content h1 .highlight {
+            color: #fbbf24;
         }
 
-        .hero p {
+        .hero-content p {
             font-size: 18px;
             line-height: 1.6;
-            margin: 0 auto 28px;
-            max-width: 650px;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.50);
+            color: #e5e7eb;
+            margin-bottom: 40px;
+            font-weight: 300;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        .btn {
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #fbbf24;
+            color: #111827;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            border: 2px solid #fbbf24;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            background: white;
-            color: #0077b6;
-            padding: 15px 34px;
-            border-radius: 35px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            transition: 0.25s;
-            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
         }
 
-        .btn:hover {
-            background: #e8f9ff;
+        .btn-primary:hover {
+            background: #f59e0b;
+            border-color: #f59e0b;
             transform: translateY(-3px);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
         }
 
-        /* =====================================================
-           WELCOME SECTION
-           ===================================================== */
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-secondary:hover {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        /* WELCOME SECTION */
         .welcome-section {
             text-align: center;
-            padding: 75px 20px;
+            padding: 80px 20px;
             background: white;
         }
 
         .welcome-section h2 {
-            color: #0077b6;
-            font-size: 32px;
+            color: #023e8a;
+            font-size: 34px;
             margin-bottom: 16px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .welcome-section p {
@@ -195,19 +240,18 @@
             font-size: 17px;
         }
 
-        /* =====================================================
-           FEATURES
-           ===================================================== */
+        /* FEATURES */
         .features {
-            padding: 65px 20px;
+            padding: 70px 20px;
             background: linear-gradient(180deg, #eef9fd, #e7f6fb);
             text-align: center;
         }
 
         .features h2 {
             color: #023e8a;
-            margin-bottom: 38px;
-            font-size: 31px;
+            margin-bottom: 40px;
+            font-size: 32px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .feature-container {
@@ -220,20 +264,20 @@
 
         .feature-card {
             background: white;
-            padding: 30px 18px;
-            border-radius: 18px;
-            box-shadow: 0 5px 18px rgba(0, 80, 120, 0.08);
-            transition: 0.25s;
+            padding: 35px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 80, 120, 0.06);
+            transition: 0.3s;
             border: 1px solid #e2f2f7;
         }
 
         .feature-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 10px 25px rgba(0, 80, 120, 0.13);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 80, 120, 0.12);
         }
 
         .feature-icon {
-            font-size: 40px;
+            font-size: 45px;
             margin-bottom: 15px;
         }
 
@@ -241,6 +285,7 @@
             color: #0077b6;
             margin-bottom: 10px;
             font-size: 18px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .feature-card p {
@@ -249,14 +294,12 @@
             font-size: 14px;
         }
 
-        /* =====================================================
-           FOOTER
-           ===================================================== */
+        /* FOOTER */
         footer {
             background: linear-gradient(135deg, #023e8a, #0077b6);
             color: white;
             text-align: center;
-            padding: 24px;
+            padding: 25px;
         }
 
         footer p {
@@ -264,81 +307,84 @@
             opacity: 0.95;
         }
 
-        /* =====================================================
-           MOBILE
-           ===================================================== */
+        /* MOBILE RESPONSIVE */
         @media (max-width: 950px) {
             .feature-container { grid-template-columns: repeat(2, 1fr); }
         }
 
-        @media (max-width: 700px) {
-            nav { padding: 12px 18px; flex-direction: column; gap: 12px; }
-            .brand { font-size: 19px; }
-            .brand img { width: 45px; height: 45px; }
-            .brand span { white-space: normal; text-align: center; }
-            .nav-links { gap: 8px; flex-wrap: wrap; justify-content: center; }
-            nav a, .logout-btn { font-size: 14px; padding: 6px 12px; }
-            .hero { min-height: 600px; padding: 50px 15px; background-position: center center; }
-            .hero-logo { width: 95px; height: 95px; margin-bottom: 18px; }
-            .hero h1 { font-size: 36px; line-height: 1.15; }
-            .hero h2 { font-size: 20px; }
-            .hero p { font-size: 16px; max-width: 500px; }
-            .btn { padding: 14px 28px; font-size: 16px; }
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 20px;
+                flex-direction: column;
+                gap: 15px;
+                border-radius: 20px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .hero-content h1 { font-size: 48px; }
+            .hero-content p { font-size: 16px; }
+            .hero-buttons { flex-direction: column; width: 100%; }
+            .btn-primary, .btn-secondary { text-align: center; justify-content: center; width: 100%; }
+        }
+
+        @media (max-width: 600px) {
             .feature-container { grid-template-columns: 1fr; }
-            .feature-card { width: 100%; max-width: 360px; margin: auto; }
-            .welcome-section, .features { padding-left: 18px; padding-right: 18px; }
-            .welcome-section h2, .features h2 { font-size: 27px; }
         }
     </style>
 </head>
-
 <body>
 
-    <!-- NAVIGATION -->
-    <nav>
-        <div class="brand">
-            <img src="{{ asset('images/otirasor-logo.png') }}?v={{ filemtime(public_path('images/otirasor-logo.png')) }}" alt="Otirasor Beach and Resort Logo">
-            <span>Otirasor Beach and Resort</span>
-        </div>
-
-        <div class="nav-links">
-            <a href="/" class="{{ request()->is('/') ? 'active-link' : '' }}">Home</a>
-            <a href="/about" class="{{ request()->is('about') ? 'active-link' : '' }}">About</a>
-            <a href="/gallery" class="{{ request()->is('gallery') ? 'active-link' : '' }}">Gallery</a>
-            <a href="/reviews" class="{{ request()->is('reviews') ? 'active-link' : '' }}">Reviews</a>
-            <a href="/contact" class="{{ request()->is('contact') ? 'active-link' : '' }}">Contact</a>
-
-            @auth
-                <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active-link' : '' }}">Dashboard</a>
-
-                <a href="{{ route('customer.notifications') }}" class="{{ request()->is('notifications') ? 'active-link' : '' }}" style="position: relative; display: inline-flex; align-items: center;">
-                    🔔 Notifications
-                    @if(auth()->user()->unreadNotifications->count() > 0)
-                        <span style="position: absolute; top: -2px; right: -2px; background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;">
-                            {{ auth()->user()->unreadNotifications->count() }}
-                        </span>
-                    @endif
-                </a>
-
-                <form method="POST" action="/logout" style="display:inline; margin: 0;">
-                    @csrf
-                    <button type="submit" class="logout-btn">Logout</button>
-                </form>
-            @else
-                <a href="/login" class="{{ request()->is('login') ? 'active-link' : '' }}">Login</a>
-                <a href="/register" class="{{ request()->is('register') ? 'active-link' : '' }}" style="background: #0077b6; color: white;">Register</a>
-            @endauth
-        </div>
-    </nav>
-
-    <!-- HERO -->
+    <!-- HERO SECTION -->
     <section class="hero">
+        
+        <!-- NAVIGATION BAR (Floating) -->
+        <nav class="navbar">
+            <div class="brand">
+                <img src="{{ asset('images/otirasor-logo.png') }}?v={{ filemtime(public_path('images/otirasor-logo.png')) }}" alt="Otirasor Logo">
+                <div class="brand-text">OTIRASOR</div>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="{{ request()->is('/') ? 'active-link' : '' }}">Home</a>
+                <a href="/about" class="{{ request()->is('about') ? 'active-link' : '' }}">About</a>
+                <a href="/gallery" class="{{ request()->is('gallery') ? 'active-link' : '' }}">Gallery</a>
+                <a href="/reviews" class="{{ request()->is('reviews') ? 'active-link' : '' }}">Reviews</a>
+                <a href="/contact" class="{{ request()->is('contact') ? 'active-link' : '' }}">Contact</a>
+
+                @auth
+                    <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active-link' : '' }}">Dashboard</a>
+                    <form method="POST" action="/logout" style="display:inline; margin: 0;">
+                        @csrf
+                        <button type="submit" class="btn-nav" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3);">Logout</button>
+                    </form>
+                @else
+                    <a href="/login" class="{{ request()->is('login') ? 'active-link' : '' }}">Login</a>
+                    <a href="/register" class="btn-nav">Book Now</a>
+                @endauth
+            </div>
+        </nav>
+
+        <!-- HERO CONTENT -->
         <div class="hero-content">
-            <img src="{{ asset('images/otirasor-logo.png') }}?v={{ filemtime(public_path('images/otirasor-logo.png')) }}" alt="Otirasor Beach and Resort Logo" class="hero-logo">
-            <h1>Welcome to Otirasor Beach and Resort</h1>
-            <h2>Relax • Enjoy • Create Memories</h2>
-            <p>Your place to relax, enjoy, and create lasting memories.</p>
-            <a href="/accommodations" class="btn">🗓️ &nbsp; Book Your Stay &nbsp; →</a>
+            <!-- LOCATION BADGE (Clickable to Google Maps) -->
+            <a href="https://www.google.com/maps/search/?api=1&query=Brgy+Talaban+Negros+Occidental+Philippines" target="_blank" class="location-badge">
+                📍 Brgy. Talaban, Negros Occidental, Philippines
+            </a>
+            
+            <h1>Where Waves<br>Meet <span class="highlight">Paradise</span></h1>
+            
+            <p>Experience the ultimate beachfront getaway. Unwind, relax, and create unforgettable memories at Otirasor Beach and Resort.</p>
+
+            <div class="hero-buttons">
+                <a href="/accommodations" class="btn-primary">
+                    🗓️ Book Your Stay →
+                </a>
+                <a href="/gallery" class="btn-secondary">
+                    Explore Gallery
+                </a>
+            </div>
         </div>
     </section>
 

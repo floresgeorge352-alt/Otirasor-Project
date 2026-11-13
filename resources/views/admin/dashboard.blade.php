@@ -33,7 +33,9 @@
         .welcome h1 { color: #023e8a; font-size: 27px; line-height: 1.3; margin-bottom: 8px; }
         .welcome p { color: #687887; font-size: 14px; line-height: 1.6; }
 
-        .live-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+        /* 3 Columns fixed layout */
+        .live-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
+        
         .stat-card { background: white; border: 1px solid #e3eaf1; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045); text-decoration: none; display: block; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); border-color: #0077b6; }
         .stat-card h3 { color: #687887; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
@@ -136,6 +138,7 @@
         <p>Manage reservations, accommodations, room availability and resort operations from one place.</p>
     </div>
 
+    <!-- 6 CARDS (3 Columns x 2 Rows) -->
     <div class="live-stats-grid">
         <a href="/admin/bookings" class="stat-card">
             <h3>Total Bookings</h3>
@@ -153,6 +156,14 @@
             <h3>Total Guests</h3>
             <div class="number" id="total-guests">{{ $totalGuests }}</div>
         </div>
+        <a href="/admin/bookings?filter=refund_pending" class="stat-card" style="border-left: 4px solid #ea580c;">
+            <h3>Pending Refunds</h3>
+            <div class="number" style="color: #ea580c;">{{ $pendingRefundsCount ?? 0 }}</div>
+        </a>
+        <a href="/admin/bookings?filter=pending" class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <h3>Pending Cancellations</h3>
+            <div class="number" style="color: #f59e0b;">{{ $pendingCancellationsCount ?? 0 }}</div>
+        </a>
     </div>
 
     <div class="section">
@@ -203,27 +214,6 @@
                 <div class="card-content">
                     <h3>Booking Information</h3>
                     <p>View booking summaries, guests and reservation details.</p>
-                </div>
-                <div class="card-arrow">→</div>
-            </a>
-
-            <a href="{{ route('admin.extra-shift-requests.employee-index') }}" class="main-card">
-                <div class="card-icon">📝</div>
-                <div class="card-content">
-                    <h3>Employee Requests</h3>
-                    <p>Review, approve or reject extra-shift requests submitted by employees.</p>
-                </div>
-                <div class="card-arrow">→</div>
-                @if(($pendingShiftRequestsCount ?? 0) > 0)
-                    <span style="position: absolute; top: 15px; right: 15px; background: #ef4444; color: white; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px;">{{ $pendingShiftRequestsCount }} Pending</span>
-                @endif
-            </a>
-
-            <a href="{{ route('admin.extra-shift-requests.offer-index') }}" class="main-card">
-                <div class="card-icon">📨</div>
-                <div class="card-content">
-                    <h3>Admin Shift Offers</h3>
-                    <p>View shift offers sent to employees and review their responses.</p>
                 </div>
                 <div class="card-arrow">→</div>
             </a>
@@ -282,6 +272,26 @@
                         {{ $pendingCancellationsCount }} Cancel
                     </span>
                 @endif
+            </a>
+
+            <!-- REFUND HISTORY CARD -->
+            <a href="{{ route('admin.refunds.history') }}" class="main-card" style="border: 2px solid #ea580c; background: #fff7ed;">
+                <div class="card-icon" style="background: #ffedd5;">📜</div>
+                <div class="card-content">
+                    <h3>Refund History</h3>
+                    <p>View all successfully processed refunds with proofs and references.</p>
+                </div>
+                <div class="card-arrow" style="color: #ea580c;">→</div>
+            </a>
+
+            <!-- AUDIT LOGS CARD -->
+            <a href="{{ route('admin.audit-logs') }}" class="main-card" style="border: 2px solid #4b5563; background: #f3f4f6;">
+                <div class="card-icon" style="background: #e5e7eb;">📝</div>
+                <div class="card-content">
+                    <h3>Audit Logs</h3>
+                    <p>Track all admin actions, approvals, and rejections for security.</p>
+                </div>
+                <div class="card-arrow" style="color: #4b5563;">→</div>
             </a>
         </div>
     </div>

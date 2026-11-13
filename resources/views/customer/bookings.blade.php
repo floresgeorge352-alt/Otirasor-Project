@@ -158,7 +158,7 @@
         Otirasor Beach and Resort
     </div>
     <div class="nav-links">
-        <a href="/dashboard">Dashboard</a>
+        <a href="/">Dashboard</a>
         <a href="/accommodations">Book Now</a>
         <a href="/my-bookings">My Bookings</a>
         <a href="/my-requests">My Requests</a>
@@ -267,6 +267,11 @@
                             <span style="font-size: 14px;">GCash Ref No: <strong>{{ $booking->refund_reference }}</strong></span>
                             @if($booking->refund_message)
                                 <br><span style="font-size: 14px; font-style: italic;">"{{ $booking->refund_message }}"</span>
+                            @endif
+                            @if($booking->refund_proof)
+                                <br><br>
+                                <strong style="font-size: 14px;">📷 Proof of Refund:</strong><br>
+                                <a href="{{ asset('storage/' . $booking->refund_proof) }}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 8px 15px; background: #166534; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold;">View Attached Proof</a>
                             @endif
                         </div>
                     @elseif($booking->refund_status === 'Rejected')

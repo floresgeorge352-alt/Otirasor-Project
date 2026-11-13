@@ -90,15 +90,15 @@
     </div>
 
     <div>
+        <a href="{{ route('admin.dashboard') }}">Dashboard</a>
         <a href="/admin/management">Management</a>
-        <a href="/admin/employees">Employees</a>
     </div>
 </nav>
 
 <div class="container">
 
-    <a href="/admin/management" class="back-button">
-        ← Back to Management
+    <a href="{{ route('admin.dashboard') }}" class="back-button">
+        ← Back to Dashboard
     </a>
 
     <div class="header">
@@ -165,37 +165,15 @@
         </div>
     </div>
 
-    <div class="table-container mb">
-        <table>
-            <thead>
-                <tr>
-                    <th>Employee</th>
-                    <th>Days Present</th>
-                    <th>Completed</th>
-                    <th>Worked Hours</th>
-                    <th>Late (min)</th>
-                    <th>Undertime (min)</th>
-                    <th>Overtime (min)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($summaries as $s)
-                    <tr>
-                        <td><strong>{{ $s['employee']->name }}</strong></td>
-                        <td>{{ $s['days_present'] }}</td>
-                        <td>{{ $s['days_completed'] }}</td>
-                        <td class="worked-hours">{{ $s['worked_hours'] }}h</td>
-                        <td class="{{ $s['late_minutes'] > 0 ? 'red' : 'gray' }}">{{ $s['late_minutes'] }}</td>
-                        <td class="{{ $s['undertime_minutes'] > 0 ? 'red' : 'gray' }}">{{ $s['undertime_minutes'] }}</td>
-                        <td class="{{ $s['overtime_minutes'] > 0 ? 'orange' : 'gray' }}">{{ $s['overtime_minutes'] }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="empty">No employees found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <!-- SEARCH BAR PARA SA MONTHLY SUMMARY -->
+    <div style="margin-bottom: 15px; position: relative; max-width: 400px;">
+        <input type="text" id="summary-search" value="{{ $search ?? '' }}" placeholder="Search employee name..." 
+            style="width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; font-size: 14px;">
+        <span style="position: absolute; left: 10px; top: 10px; color: #999;">🔍</span>
+    </div>
+
+    <div class="table-container mb" id="summary-table-container">
+        @include('admin.attendance._summary_table', ['summaries' => $summaries])
     </div>
 
     {{-- ============================================ --}}
@@ -207,121 +185,53 @@
     </div>
 
     <div class="filter-box">
-        <form method="GET" action="{{ url('/admin/attendance') }}">
-            <label for="date">Select Date:</label>
-            <input type="date" id="date" name="date" value="{{ request('date') }}">
-            <button type="submit">Filter</button>
-            <a href="{{ url('/admin/attendance') }}">Clear</a>
+        <form method="GET" action="{{ url('/admin/attendance') }}" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label>Select Date:</label>
+            
+            <!-- MONTH DROPDOWN (AUTO SUBMIT) -->
+            <select name="month" onchange="this.form.submit()">
+                @for ($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
+                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                    </option>
+                @endfor
+            </select>
+
+            <!-- DAY DROPDOWN (AUTO SUBMIT) -->
+            <select name="day" onchange="this.form.submit()" style="min-width: 80px;">
+                <option value="">Day</option>
+                @for ($d = 1; $d <= 31; $d++)
+                    @php
+                        $isValidDay = checkdate($month, $d, $year);
+                    @endphp
+                    @if($isValidDay)
+                        <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>
+                            {{ $d }}
+                        </option>
+                    @endif
+                @endfor
+            </select>
+
+            <!-- YEAR DROPDOWN (AUTO SUBMIT) -->
+            <select name="year" onchange="this.form.submit()">
+                @for ($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+
+            <a href="{{ url('/admin/attendance') }}" style="text-decoration: none; color: #023e8a; font-weight: bold; margin-left: 10px;">Clear</a>
         </form>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Employee</th>
-                    <th>Date</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Late</th>
-                    <th>Undertime</th>
-                    <th>Overtime</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
+    <!-- SEARCH BAR PARA SA DAILY RECORDS -->
+    <div style="margin-bottom: 15px; position: relative; max-width: 400px;">
+        <input type="text" id="daily-search" value="{{ $search ?? '' }}" placeholder="Search employee name..." 
+            style="width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; font-size: 14px;">
+        <span style="position: absolute; left: 10px; top: 10px; color: #999;">🔍</span>
+    </div>
 
-            <tbody>
-                @php
-                    $formatDuration = function ($minutes) {
-                        $minutes = (int) $minutes;
-                        if ($minutes <= 0) return '—';
-                        $hours = intdiv($minutes, 60);
-                        $remainingMinutes = $minutes % 60;
-                        $parts = [];
-                        if ($hours > 0) $parts[] = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
-                        if ($remainingMinutes > 0) $parts[] = $remainingMinutes . ' ' . ($remainingMinutes === 1 ? 'minute' : 'minutes');
-                        return implode(' ', $parts);
-                    };
-                @endphp
-
-                @forelse ($attendances as $attendance)
-                    <tr>
-                        <td>{{ $attendance->user->name ?? 'Unknown Employee' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($attendance->date)->format('M d, Y') }}</td>
-                        <td>
-                            @if ($attendance->time_in)
-                                {{ \Carbon\Carbon::parse($attendance->time_in)->format('h:i A') }}
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td>
-                            @if ($attendance->time_out)
-                                {{ \Carbon\Carbon::parse($attendance->time_out)->format('h:i A') }}
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td class="duration">
-                            @if (($attendance->late_minutes ?? 0) > 0)
-                                {{ $formatDuration($attendance->late_minutes) }} late
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td class="duration">
-                            @if (($attendance->undertime_minutes ?? 0) > 0)
-                                {{ $formatDuration($attendance->undertime_minutes) }} undertime
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td>
-                            @if (($attendance->overtime_minutes ?? 0) > 0)
-                                <div class="duration">
-                                    {{ $formatDuration($attendance->overtime_minutes) }}
-                                </div>
-
-                                @php
-                                    $overtimeStatus = $attendance->overtime_status ?? 'Not Requested';
-                                    $overtimeStatusClass = match ($overtimeStatus) {
-                                        'Approved' => 'approved',
-                                        'Rejected' => 'rejected',
-                                        default => '',
-                                    };
-                                @endphp
-
-                                <small class="overtime-status {{ $overtimeStatusClass }}">
-                                    {{ $overtimeStatus }}
-                                </small>
-
-                                @if ($overtimeStatus === 'Pending Approval')
-                                    <div class="overtime-actions">
-                                        <form method="POST" action="{{ route('admin.attendance.approve-overtime', $attendance->id) }}" onsubmit="return confirm('Approve this overtime record?')">
-                                            @csrf
-                                            <button type="submit" class="approve-button">Approve</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.attendance.reject-overtime', $attendance->id) }}" onsubmit="return confirm('Reject this overtime record?')">
-                                            @csrf
-                                            <button type="submit" class="reject-button">Reject</button>
-                                        </form>
-                                    </div>
-                                @endif
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td class="status {{ strtolower($attendance->status ?? '') === 'present' ? 'present' : 'absent' }}">
-                            {{ $attendance->status ?? 'Unknown' }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="empty">No attendance records found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <div class="table-container" id="daily-table-container">
+        @include('admin.attendance._daily_table', ['attendances' => $attendances])
     </div>
 
 </div>
@@ -356,6 +266,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 1500);
             }
         });
+});
+</script>
+
+<!-- LIVE SEARCH SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const month = '{{ $month }}';
+    const year = '{{ $year }}';
+    const day = '{{ $day }}';
+
+    // === SEARCH PARA SA MONTHLY SUMMARY ===
+    const summarySearchInput = document.getElementById('summary-search');
+    const summaryTableContainer = document.getElementById('summary-table-container');
+    let summaryTimer;
+
+    if (summarySearchInput) {
+        summarySearchInput.addEventListener('input', function () {
+            clearTimeout(summaryTimer);
+            summaryTimer = setTimeout(() => {
+                const query = this.value;
+                fetch(`{{ route('admin.attendance.search-summary') }}?search=${encodeURIComponent(query)}&month=${month}&year=${year}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => { summaryTableContainer.innerHTML = data.html; })
+                .catch(error => console.error('Error:', error));
+            }, 300);
+        });
+    }
+
+    // === SEARCH PARA SA DAILY RECORDS ===
+    const dailySearchInput = document.getElementById('daily-search');
+    const dailyTableContainer = document.getElementById('daily-table-container');
+    let dailyTimer;
+
+    if (dailySearchInput) {
+        dailySearchInput.addEventListener('input', function () {
+            clearTimeout(dailyTimer);
+            dailyTimer = setTimeout(() => {
+                const query = this.value;
+                fetch(`{{ route('admin.attendance.search-daily') }}?search=${encodeURIComponent(query)}&month=${month}&year=${year}&day=${day}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => { dailyTableContainer.innerHTML = data.html; })
+                .catch(error => console.error('Error:', error));
+            }, 300);
+        });
+    }
 });
 </script>
 

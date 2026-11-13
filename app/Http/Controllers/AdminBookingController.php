@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\RewardPoint;
+use App\Models\AuditLog; // <-- IDINAGDAG
 use App\Notifications\BookingConfirmedNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Notifications\CancellationApprovedNotification;
@@ -21,16 +22,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminBookingController extends Controller
 {
+    private function broadcastAvailability(Booking $booking, string $reason): void
+    {
+        \App\Events\AvailabilityUpdated::dispatch([
+            'reason' => $reason,
+            'booking_id' => $booking->id,
+            'status' => $booking->status,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $filter = $request->query('filter', 'all');
         $month = $request->query('month');
         $bookingId = $request->query('booking_id');
 
-        $query = Booking::query();
+        $query = Booking::query()->with('paymentLogs');
 
         if ($bookingId) {
             $query->where('id', $bookingId);
@@ -69,11 +80,34 @@ class AdminBookingController extends Controller
             return back()->with('error', 'Verify the GCash payment before approving this booking.');
         }
 
-        DB::transaction(function () use ($booking) {
+        $oldStatus = $booking->status;
+
+        DB::transaction(function () use ($booking, $oldStatus) {
             $booking->update([
                 'status' => 'Confirmed',
                 'receipt_number' => 'ER-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT),
                 'receipt_generated_at' => now(),
+            ]);
+
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'approve_booking',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'old_values' => ['status' => $oldStatus],
+                'new_values' => ['status' => 'Confirmed'],
+                'ip_address' => request()->ip(),
+            ]);
+
+            // Auto-log ang pag-approve at receipt generation
+            \App\Models\PaymentLog::create([
+                'booking_id' => $booking->id,
+                'user_id' => auth()->id(),
+                'payment_method' => $booking->payment_method,
+                'status' => 'Receipt Generated',
+                'reference_number' => $booking->gcash_reference,
+                'remarks' => 'Booking approved and receipt automatically generated.',
             ]);
 
             if ($booking->user) {
@@ -89,6 +123,8 @@ class AdminBookingController extends Controller
             \App\Events\RoomStatusUpdated::dispatch($booking);
         });
 
+        $this->broadcastAvailability($booking, 'admin_approved');
+
         return redirect('/admin/bookings?filter=confirmed')
             ->with('success', 'Booking approved successfully and e-receipt generated.');
     }
@@ -99,13 +135,25 @@ class AdminBookingController extends Controller
             'rejection_reason' => 'required|string|max:1000',
         ]);
 
-        DB::transaction(function () use ($booking, $request) {
+        $oldStatus = $booking->status;
+
+        DB::transaction(function () use ($booking, $request, $oldStatus) {
             $booking->update([
                 'status' => 'Rejected',
                 'rejection_reason' => $request->rejection_reason,
             ]);
 
-            // Return points
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'reject_booking',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'old_values' => ['status' => $oldStatus],
+                'new_values' => ['status' => 'Rejected', 'reason' => $request->rejection_reason],
+                'ip_address' => request()->ip(),
+            ]);
+
             if ($booking->reward_points_used > 0 && $booking->user) {
                 $booking->user->increment('reward_points', $booking->reward_points_used);
                 RewardPoint::create([
@@ -130,17 +178,43 @@ class AdminBookingController extends Controller
             \App\Events\RoomStatusUpdated::dispatch($booking);
         });
 
+        $this->broadcastAvailability($booking, 'admin_rejected');
+
         return redirect('/admin/bookings?filter=rejected')
             ->with('success', 'Booking rejected successfully and email sent.');
     }
 
     public function verifyPayment(Booking $booking)
     {
-        $booking->update(['payment_status' => 'Verified']);
+        $oldPaymentStatus = $booking->payment_status;
 
-        if ($booking->user) {
-            $booking->user->notify(new PaymentVerifiedNotification($booking));
-        }
+        DB::transaction(function () use ($booking, $oldPaymentStatus) {
+            $booking->update(['payment_status' => 'Verified']);
+
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'verify_payment',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'old_values' => ['payment_status' => $oldPaymentStatus],
+                'new_values' => ['payment_status' => 'Verified'],
+                'ip_address' => request()->ip(),
+            ]);
+
+            \App\Models\PaymentLog::create([
+                'booking_id' => $booking->id,
+                'user_id' => auth()->id(),
+                'payment_method' => $booking->payment_method,
+                'status' => 'Verified',
+                'reference_number' => $booking->gcash_reference,
+                'remarks' => 'Payment verified by admin.',
+            ]);
+
+            if ($booking->user) {
+                $booking->user->notify(new PaymentVerifiedNotification($booking));
+            }
+        });
 
         return redirect('/admin/bookings')->with('success', 'GCash payment verified successfully.');
     }
@@ -151,11 +225,33 @@ class AdminBookingController extends Controller
             'payment_rejection_reason' => 'required|string|max:1000',
         ]);
 
-        DB::transaction(function () use ($booking, $request) {
+        $oldPaymentStatus = $booking->payment_status;
+
+        DB::transaction(function () use ($booking, $request, $oldPaymentStatus) {
             $booking->update([
                 'payment_status' => 'Rejected',
                 'payment_rejection_reason' => $request->payment_rejection_reason,
                 'refund_status' => $booking->status === 'Confirmed' ? 'Pending' : $booking->refund_status,
+            ]);
+
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'reject_payment',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'old_values' => ['payment_status' => $oldPaymentStatus],
+                'new_values' => ['payment_status' => 'Rejected', 'reason' => $request->payment_rejection_reason],
+                'ip_address' => request()->ip(),
+            ]);
+
+            \App\Models\PaymentLog::create([
+                'booking_id' => $booking->id,
+                'user_id' => auth()->id(),
+                'payment_method' => $booking->payment_method,
+                'status' => 'Rejected',
+                'reference_number' => $booking->gcash_reference,
+                'remarks' => $request->payment_rejection_reason,
             ]);
 
             if ($booking->user) {
@@ -183,6 +279,16 @@ class AdminBookingController extends Controller
             'refund_notes' => $request->refund_notes,
         ]);
 
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'refund_booking',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'new_values' => ['refund_status' => 'Refunded', 'notes' => $request->refund_notes],
+            'ip_address' => request()->ip(),
+        ]);
+
         return redirect('/admin/bookings')->with('success', 'Booking marked as refunded successfully.');
     }
 
@@ -191,10 +297,20 @@ class AdminBookingController extends Controller
         $request->validate([
             'refund_reference' => 'required|string|max:255',
             'refund_message' => 'nullable|string|max:1000',
+            'refund_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         if ($booking->refund_status !== 'Pending') {
             return back()->with('error', 'This refund request is not pending.');
+        }
+
+        $refundProofPath = $booking->refund_proof;
+        if ($request->hasFile('refund_proof')) {
+            if ($refundProofPath && Storage::disk('public')->exists($refundProofPath)) {
+                Storage::disk('public')->delete($refundProofPath);
+            }
+            
+            $refundProofPath = $request->file('refund_proof')->store('refund-proofs', 'public');
         }
 
         $booking->update([
@@ -202,6 +318,17 @@ class AdminBookingController extends Controller
             'refunded_at' => now(),
             'refund_reference' => $request->refund_reference,
             'refund_message' => $request->refund_message,
+            'refund_proof' => $refundProofPath,
+        ]);
+
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'approve_refund',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'new_values' => ['refund_status' => 'Refunded', 'reference' => $request->refund_reference],
+            'ip_address' => request()->ip(),
         ]);
 
         if ($booking->user) {
@@ -235,6 +362,16 @@ class AdminBookingController extends Controller
             'refund_notes' => $request->refund_notes,
         ]);
 
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'reject_refund',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'new_values' => ['refund_status' => 'Rejected', 'notes' => $request->refund_notes],
+            'ip_address' => request()->ip(),
+        ]);
+
         if ($booking->user) {
             $booking->user->notify(new RefundRejectedNotification($booking));
         }
@@ -254,7 +391,16 @@ class AdminBookingController extends Controller
                 'cancellation_status' => 'Approved',
             ]);
 
-            // Return points
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'approve_cancellation',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'new_values' => ['cancellation_status' => 'Approved', 'status' => 'Cancelled'],
+                'ip_address' => request()->ip(),
+            ]);
+
             if ($booking->reward_points_used > 0 && $booking->user) {
                 $booking->user->increment('reward_points', $booking->reward_points_used);
                 RewardPoint::create([
@@ -274,6 +420,8 @@ class AdminBookingController extends Controller
             \App\Events\RoomStatusUpdated::dispatch($booking);
         });
 
+        $this->broadcastAvailability($booking, 'admin_cancellation_approved');
+
         return back()->with('success', 'Cancellation request approved.');
     }
 
@@ -286,6 +434,16 @@ class AdminBookingController extends Controller
         DB::transaction(function () use ($booking) {
             $booking->update([
                 'cancellation_status' => 'Rejected',
+            ]);
+
+            // Audit Log
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'reject_cancellation',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'new_values' => ['cancellation_status' => 'Rejected'],
+                'ip_address' => request()->ip(),
             ]);
 
             if ($booking->user) {
@@ -304,7 +462,19 @@ class AdminBookingController extends Controller
             return back()->with('error', 'Only confirmed bookings can be checked in.');
         }
 
+        $oldStatus = $booking->status;
         $booking->update(['status' => 'Checked In']);
+
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'check_in',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => 'Checked In'],
+            'ip_address' => request()->ip(),
+        ]);
 
         \App\Events\BookingStatusUpdated::dispatch($booking);
         \App\Events\RoomStatusUpdated::dispatch($booking);
@@ -318,7 +488,19 @@ class AdminBookingController extends Controller
             return back()->with('error', 'Only checked-in bookings can be checked out.');
         }
 
+        $oldStatus = $booking->status;
         $booking->update(['status' => 'Checked Out']);
+
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'check_out',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => 'Checked Out'],
+            'ip_address' => request()->ip(),
+        ]);
 
         $rooms = $booking->accommodations()->get();
         
@@ -340,6 +522,8 @@ class AdminBookingController extends Controller
 
         \App\Events\BookingStatusUpdated::dispatch($booking);
         \App\Events\RoomStatusUpdated::dispatch($booking);
+
+        $this->broadcastAvailability($booking, 'admin_checked_out');
 
         return back()->with('success', 'Guest checked out successfully. Room is now marked for cleaning.');
     }
@@ -369,8 +553,20 @@ class AdminBookingController extends Controller
 
         $booking->update(['status' => 'Completed']);
 
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'mark_cleaned',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'new_values' => ['status' => 'Completed', 'rooms' => 'cleaned'],
+            'ip_address' => request()->ip(),
+        ]);
+
         \App\Events\BookingStatusUpdated::dispatch($booking);
         \App\Events\RoomStatusUpdated::dispatch($booking);
+
+        $this->broadcastAvailability($booking, 'admin_marked_cleaned');
 
         return back()->with('success', 'Rooms marked as cleaned and booking completed.');
     }
@@ -381,7 +577,19 @@ class AdminBookingController extends Controller
             return back()->with('error', 'Only checked-out bookings can be completed.');
         }
 
+        $oldStatus = $booking->status;
         $booking->update(['status' => 'Completed']);
+
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'complete_booking',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => 'Completed'],
+            'ip_address' => request()->ip(),
+        ]);
 
         \App\Events\BookingStatusUpdated::dispatch($booking);
 
@@ -394,9 +602,20 @@ class AdminBookingController extends Controller
             return back()->with('error', 'Only confirmed or checked-in bookings can be marked as no-show.');
         }
 
+        $oldStatus = $booking->status;
         $booking->update(['status' => 'No Show']);
 
-        // Return points
+        // Audit Log
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'mark_no_show',
+            'model_type' => Booking::class,
+            'model_id' => $booking->id,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => 'No Show'],
+            'ip_address' => request()->ip(),
+        ]);
+
         if ($booking->reward_points_used > 0 && $booking->user) {
             $booking->user->increment('reward_points', $booking->reward_points_used);
             RewardPoint::create([
@@ -410,6 +629,8 @@ class AdminBookingController extends Controller
 
         \App\Events\BookingStatusUpdated::dispatch($booking);
         \App\Events\RoomStatusUpdated::dispatch($booking);
+
+        $this->broadcastAvailability($booking, 'admin_no_show');
 
         return back()->with('success', 'Booking marked as no-show.');
     }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\ExtraShiftRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -24,7 +24,7 @@ class AdminEmployeeController extends Controller
     }
 
     // =========================================================
-    // EMPLOYEE MANAGEMENT
+    // EMPLOYEE MANAGEMENT (KASAMA NA ANG WEEKLY SCHEDULE)
     // =========================================================
 
     public function index(Request $request)
@@ -38,6 +38,13 @@ class AdminEmployeeController extends Controller
         if (! in_array($status, ['all', 'Active', 'Inactive'], true)) {
             $status = 'all';
         }
+
+        // --- WEEKLY SCHEDULE DATA ---
+        $weekParam = $request->query('week');
+        $startOfWeek = $weekParam 
+            ? Carbon::parse($weekParam)->startOfWeek() 
+            : now()->startOfWeek();
+        $endOfWeek = $startOfWeek->copy()->endOfWeek();
 
         // EMPLOYEE QUERY
         $employeeQuery = User::query()
@@ -66,19 +73,11 @@ class AdminEmployeeController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // ACTIVE EMPLOYEES FOR SHIFT-OFFER DROPDOWN
+        // ACTIVE EMPLOYEES FOR SCHEDULE
         $activeEmployees = User::query()
             ->where('role', 'employee')
             ->whereRaw('TRIM(status) = ?', ['Active'])
             ->orderBy('name')
-            ->get();
-
-        // EXISTING SHIFT REQUESTS
-        $extraShiftRequests = ExtraShiftRequest::with([
-            'employee',
-            'requester',
-        ])
-            ->latest()
             ->get();
 
         return view(
@@ -86,11 +85,42 @@ class AdminEmployeeController extends Controller
             compact(
                 'employees',
                 'activeEmployees',
-                'extraShiftRequests',
                 'search',
-                'status'
+                'status',
+                'startOfWeek',
+                'endOfWeek'
             )
         );
+    }
+
+    // =========================================================
+    // AJAX LIVE SEARCH
+    // =========================================================
+
+    public function search(Request $request)
+    {
+        $search = trim($request->query('search', ''));
+        $status = $request->query('status', 'all');
+
+        if (! in_array($status, ['all', 'Active', 'Inactive'], true)) {
+            $status = 'all';
+        }
+
+        $employeeQuery = User::query()->where('role', 'employee');
+
+        if ($search !== '') {
+            $employeeQuery->where('name', 'like', '%' . $search . '%');
+        }
+
+        if ($status !== 'all') {
+            $employeeQuery->whereRaw('TRIM(status) = ?', [$status]);
+        }
+
+        $employees = $employeeQuery->orderBy('name')->paginate(10)->withQueryString();
+
+        return response()->json([
+            'html' => view('admin.employees._employee_table', compact('employees'))->render()
+        ]);
     }
 
     // =========================================================

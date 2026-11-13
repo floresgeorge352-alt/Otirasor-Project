@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Accommodation;
 use App\Models\Booking;
-use App\Models\ExtraShiftRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -25,7 +24,7 @@ class AdminDashboardController extends Controller
         // BILANG PARA SA MGA BADGES
         $pendingRefundsCount = Booking::where('refund_status', 'Pending')->count();
         $pendingCancellationsCount = Booking::where('cancellation_status', 'Pending')->count();
-        $pendingShiftRequestsCount = ExtraShiftRequest::where('status', 'Pending')->count();
+        $pendingShiftRequestsCount = 0; // Extra Shift feature removed
 
         $totalGuests = Booking::whereIn('status', ['Pending', 'Confirmed', 'Checked In'])
             ->sum('number_of_guests');
@@ -136,6 +135,7 @@ class AdminDashboardController extends Controller
     {
         // Kunin ang year mula sa URL, default sa kasalukuyang taon
         $selectedYear = (int) $request->query('year', date('Y'));
+        $search = trim($request->query('search', '')); // <-- IDINAGDAG PARA SA SEARCH
 
         $pendingBookings   = Booking::where('status', 'Pending')->count();
         $confirmedBookings = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])->count();
@@ -184,7 +184,6 @@ class AdminDashboardController extends Controller
             // =================================================================
 
             // === FIXED: Occupancy = rooms booked / total rooms ===
-            // Kunin ang lahat ng bookings ng month, tapos i-count ang UNIQUE room names
             $occupiedRoomsThisMonth = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])
                 ->whereYear('check_in', $selectedYear)
                 ->whereMonth('check_in', $i)
@@ -208,7 +207,74 @@ class AdminDashboardController extends Controller
             'GCash' => Booking::where('payment_method', 'GCash')->count(),
         ];
 
+        // === ATTENDANCE ANALYTICS (PER EMPLOYEE) ===
+        $employeesQuery = \App\Models\User::where('role', 'employee')
+            ->where('status', 'Active')
+            ->orderBy('name');
+
+        // I-filter ang employees base sa search
+        if ($search !== '') {
+            $employeesQuery->where('name', 'like', "%{$search}%");
+        }
+
+        $employees = $employeesQuery->get();
+
+        $employeeStats = [];
+        $totalLateMinutes = 0;
+        $totalOvertimeMinutes = 0;
+        $totalUndertimeMinutes = 0;
+        $totalWorkedMinutes = 0;
+
+        foreach ($employees as $employee) {
+            $records = \App\Models\Attendance::where('user_id', $employee->id)
+                ->whereYear('date', $selectedYear)
+                ->get();
+
+            $present = $records->whereNotNull('time_in')->count();
+            $late = $records->filter(fn($r) => $r->late_minutes > 0)->count();
+            $absent = $records->where('status', 'Absent')->count();
+            
+            $lateMins = (int) $records->sum('late_minutes');
+            $otMins = (int) $records->sum('overtime_minutes');
+            $utMins = (int) $records->sum('undertime_minutes');
+
+            $workedMins = $records->filter(fn ($r) => $r->time_in && $r->time_out)
+                ->sum(function ($r) {
+                    return \Carbon\Carbon::parse($r->time_in)->diffInMinutes(\Carbon\Carbon::parse($r->time_out));
+                });
+
+            // Accumulate totals for the top cards
+            $totalLateMinutes += $lateMins;
+            $totalOvertimeMinutes += $otMins;
+            $totalUndertimeMinutes += $utMins;
+            $totalWorkedMinutes += $workedMins;
+
+            $employeeStats[] = [
+                'name' => $employee->name,
+                'present' => $present,
+                'late_count' => $late,
+                'absent_count' => $absent,
+                'late_minutes' => $lateMins,
+                'overtime_minutes' => $otMins,
+                'undertime_minutes' => $utMins,
+                'worked_hours' => round($workedMins / 60, 2),
+            ];
+        }
+
+        // I-sort natin kung sino ang pinakamaraming late (descending)
+        usort($employeeStats, fn($a, $b) => $b['late_minutes'] <=> $a['late_minutes']);
+
+        $totalWorkedHours = round($totalWorkedMinutes / 60, 2);
+        // =================================
+
         $unreadNotificationsCount = auth()->user()->unreadNotifications()->count();
+
+        // === KUNG AJAX REQUEST, IBALIK LANG ANG TABLE PART ===
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('admin.analytics._table', compact('employeeStats'))->render()
+            ]);
+        }
 
         return view('admin.analytics', compact(
             'statusData',
@@ -219,8 +285,65 @@ class AdminDashboardController extends Controller
             'chartOccupancy',
             'paymentMethodData',
             'unreadNotificationsCount',
-            'selectedYear'
+            'selectedYear',
+            'totalLateMinutes',
+            'totalOvertimeMinutes',
+            'totalUndertimeMinutes',
+            'totalWorkedHours',
+            'employeeStats',
+            'search' // <-- Idinagdag para ma-maintain ang value sa search bar
         ));
+    }
+
+    public function printAnalytics(Request $request)
+    {
+        $selectedYear = (int) $request->query('year', date('Y'));
+        $search = trim($request->query('search', ''));
+
+        $employeesQuery = \App\Models\User::where('role', 'employee')
+            ->where('status', 'Active')
+            ->orderBy('name');
+
+        if ($search !== '') {
+            $employeesQuery->where('name', 'like', "%{$search}%");
+        }
+
+        $employees = $employeesQuery->get();
+        $employeeStats = [];
+
+        foreach ($employees as $employee) {
+            $records = \App\Models\Attendance::where('user_id', $employee->id)
+                ->whereYear('date', $selectedYear)
+                ->get();
+
+            $present = $records->whereNotNull('time_in')->count();
+            $late = $records->filter(fn($r) => $r->late_minutes > 0)->count();
+            $absent = $records->where('status', 'Absent')->count();
+            
+            $lateMins = (int) $records->sum('late_minutes');
+            $otMins = (int) $records->sum('overtime_minutes');
+            $utMins = (int) $records->sum('undertime_minutes');
+
+            $workedMins = $records->filter(fn ($r) => $r->time_in && $r->time_out)
+                ->sum(function ($r) {
+                    return \Carbon\Carbon::parse($r->time_in)->diffInMinutes(\Carbon\Carbon::parse($r->time_out));
+                });
+
+            $employeeStats[] = [
+                'name' => $employee->name,
+                'present' => $present,
+                'late_count' => $late,
+                'absent_count' => $absent,
+                'late_minutes' => $lateMins,
+                'overtime_minutes' => $otMins,
+                'undertime_minutes' => $utMins,
+                'worked_hours' => round($workedMins / 60, 2),
+            ];
+        }
+
+        usort($employeeStats, fn($a, $b) => $b['late_minutes'] <=> $a['late_minutes']);
+
+        return view('admin.analytics.print', compact('employeeStats', 'selectedYear', 'search'));
     }
 
     public function recentBookings()
@@ -313,11 +436,6 @@ class AdminDashboardController extends Controller
         $bookingId = $notification->data['booking_id'] ?? null;
         if ($bookingId) {
             return redirect('/admin/bookings?booking_id=' . $bookingId);
-        }
-
-        $extraShiftRequestId = $notification->data['extra_shift_request_id'] ?? null;
-        if ($extraShiftRequestId) {
-            return redirect('/admin/shift-ops');
         }
 
         return redirect('/admin/notifications');

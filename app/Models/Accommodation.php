@@ -12,17 +12,22 @@ class Accommodation extends Model
         'type',
         'room_type',
         'description',
-        'amenities', // <-- Idinagdag
+        'amenities',
         'price',
         'capacity',
         'image',
         'status',
+        'maintenance_start',
+        'maintenance_end',
+        'maintenance_reason',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'capacity' => 'integer',
-        'amenities' => 'array', // <-- Idinagdag
+        'amenities' => 'array',
+        'maintenance_start' => 'date',
+        'maintenance_end' => 'date',
     ];
 
     /**

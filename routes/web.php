@@ -12,12 +12,16 @@ use App\Http\Controllers\AdminAccommodationController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminEmployeeController;
-use App\Http\Controllers\ExtraShiftRequestController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AdminGalleryController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\PublicReviewController;
 use App\Http\Controllers\AdminPromotionController;
+use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\ReservationHoldController;
+use App\Http\Controllers\EmployeeNotificationController;
+use App\Http\Controllers\AdminBackupController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,6 +53,21 @@ Route::get('/reviews', [PublicReviewController::class, 'index'])->name('public.r
 
 /*
 |--------------------------------------------------------------------------
+| Real-time Availability & Reservation Holds
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/api/availability', [AvailabilityController::class, 'index'])
+    ->name('api.availability');
+
+Route::post('/reservation-holds', [ReservationHoldController::class, 'store'])
+    ->name('reservation-holds.store');
+
+Route::delete('/reservation-holds/{hold}', [ReservationHoldController::class, 'release'])
+    ->name('reservation-holds.release');
+
+/*
+|--------------------------------------------------------------------------
 | Customer Routes
 |--------------------------------------------------------------------------
 */
@@ -69,9 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/booking', [BookingController::class, 'create']);
     Route::post('/booking', [BookingController::class, 'store']);
 
-    // === NEW: Promo Code Check Route ===
     Route::get('/check-promo', [BookingController::class, 'checkPromo']);
-    // ===================================
 
     Route::get(
         '/booking/confirmation/{booking}',
@@ -80,14 +97,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/my-bookings', [CustomerBookingController::class, 'index']);
 
-    // === NEW: My Requests Page ===
     Route::get('/my-requests', [\App\Http\Controllers\CustomerRequestController::class, 'index'])->name('customer.requests');
-    // =============================
 
-    // === REWARDS (CUSTOMER) ===
     Route::get('/my-rewards', [\App\Http\Controllers\RewardController::class, 'index'])->name('customer.rewards.index');
     Route::post('/my-bookings/{booking}/apply-rewards', [\App\Http\Controllers\RewardController::class, 'apply'])->name('customer.rewards.apply');
-    // =========================
 
     Route::post(
         '/my-bookings/{booking}/cancel',
@@ -109,12 +122,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [BookingController::class, 'requestCancellation']
     );
 
-    // === NEW: Refund Request Route ===
     Route::post(
         '/my-bookings/{booking}/request-refund',
         [CustomerBookingController::class, 'requestRefund']
     )->name('customer.bookings.request-refund');
-    // =================================
 
     Route::post(
         '/my-bookings/{booking}/review',
@@ -134,12 +145,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Customer Dashboard
+| Customer Dashboard (WITH ROLE REDIRECT FIX)
 |--------------------------------------------------------------------------
 */
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    // Kapag Admin, i-redirect sa Admin Dashboard
+    if (auth()->check() && auth()->user()->role === 'admin') {
+        return redirect('/admin/dashboard');
+    }
+    // Kapag Employee, i-redirect sa Employee Dashboard
+    if (auth()->check() && auth()->user()->role === 'employee') {
+        return redirect('/employee/dashboard');
+    }
+    
+    // IDINAGDAG: Tumuturo sa Customer Dashboard file
+    return view('customer.dashboard'); 
 })
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -160,6 +181,13 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
+    // === TWO-FACTOR AUTHENTICATION ===
+    Route::get('/profile/two-factor', [TwoFactorController::class, 'index'])->name('two-factor.show');
+    Route::post('/profile/two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::post('/profile/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.regenerate-codes');
+    Route::post('/profile/two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
 });
 
 /*
@@ -168,7 +196,7 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get(
         '/admin/dashboard',
@@ -179,6 +207,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
         '/admin/analytics',
         [AdminDashboardController::class, 'analytics']
     )->name('admin.analytics');
+
+    Route::get(
+        '/admin/analytics/print',
+        [AdminDashboardController::class, 'printAnalytics']
+    )->name('admin.analytics.print');
+
+    Route::get('/admin/audit-logs', [\App\Http\Controllers\AdminAuditLogController::class, 'index'])->name('admin.audit-logs');
 
     Route::get('/admin/management', function () {
         return view('admin.management.index');
@@ -204,6 +239,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     );
 
     Route::get(
+        '/admin/weekly-schedule',
+        [AdminDashboardController::class, 'weeklySchedule']
+    )->name('admin.weekly-schedule');
+
+    Route::get(
         '/admin/notifications',
         [AdminDashboardController::class, 'notifications']
     );
@@ -218,24 +258,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminReportController::class, 'index']
     );
 
-    // === BAGONG PROMOTION ROUTES ===
     Route::get('/admin/promotions', [AdminPromotionController::class, 'index']);
     Route::post('/admin/promotions', [AdminPromotionController::class, 'store']);
     Route::post('/admin/promotions/{promotion}/toggle', [AdminPromotionController::class, 'toggle']);
     Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy']);
-    // ===============================
 
-    // === TRANSACTION RECORDS ===
     Route::get('/admin/transactions', [\App\Http\Controllers\AdminTransactionController::class, 'index'])->name('admin.transactions');
     Route::get('/admin/transactions/export', [\App\Http\Controllers\AdminTransactionController::class, 'exportCsv'])->name('admin.transactions.export');
     Route::get('/admin/transactions/export-pdf', [\App\Http\Controllers\AdminTransactionController::class, 'exportPdf'])->name('admin.transactions.export-pdf');
-    // ===========================
 
-    // === REWARDS (ADMIN) ===
+    Route::get('/admin/refund-history', [\App\Http\Controllers\AdminRefundController::class, 'index'])->name('admin.refunds.history');
+
     Route::get('/admin/rewards', [\App\Http\Controllers\AdminRewardController::class, 'index'])->name('admin.rewards.index');
     Route::post('/admin/rewards/{user}/adjust', [\App\Http\Controllers\AdminRewardController::class, 'adjust'])->name('admin.rewards.adjust');
     Route::get('/admin/rewards/{user}/history', [\App\Http\Controllers\AdminRewardController::class, 'history'])->name('admin.rewards.history');
-    // ======================
 
     Route::get(
         '/admin/payments',
@@ -283,9 +319,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminBookingController::class, 'reject']
     );
 
-    // =========================================================
-    // CANCELLATION APPROVAL (FIXED — now on AdminBookingController)
-    // =========================================================
     Route::post(
         '/admin/bookings/{booking}/approve-cancellation',
         [AdminBookingController::class, 'approveCancellation']
@@ -295,7 +328,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         '/admin/bookings/{booking}/reject-cancellation',
         [AdminBookingController::class, 'rejectCancellation']
     )->name('admin.bookings.reject-cancellation');
-    // =========================================================
 
     Route::post(
         '/admin/bookings/{booking}/verify-payment',
@@ -312,7 +344,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminBookingController::class, 'refund']
     )->name('admin.bookings.refund');
 
-    // === NEW: ADMIN REFUND APPROVAL ROUTES ===
     Route::post(
         '/admin/bookings/{booking}/approve-refund',
         [AdminBookingController::class, 'approveRefund']
@@ -322,7 +353,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         '/admin/bookings/{booking}/reject-refund',
         [AdminBookingController::class, 'rejectRefund']
     )->name('admin.bookings.reject-refund');
-    // ==========================================
 
     Route::post(
         '/admin/bookings/{booking}/check-in',
@@ -385,6 +415,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     )->name('admin.employees.index');
 
     Route::get(
+        '/admin/employees/search',
+        [AdminEmployeeController::class, 'search']
+    )->name('admin.employees.search');
+
+    Route::get(
         '/admin/employees/create',
         [AdminEmployeeController::class, 'create']
     )->name('admin.employees.create');
@@ -405,31 +440,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     )->name('admin.employees.update');
 
     Route::get(
-        '/admin/employee-shift-requests',
-        [ExtraShiftRequestController::class, 'adminEmployeeRequests']
-    )->name('admin.extra-shift-requests.employee-index');
-
-    Route::get(
-        '/admin/shift-offers',
-        [ExtraShiftRequestController::class, 'adminShiftOffers']
-    )->name('admin.extra-shift-requests.offer-index');
-
-    Route::post(
-        '/admin/extra-shift-requests',
-        [ExtraShiftRequestController::class, 'store']
-    )->name('admin.extra-shift-requests.store');
-
-    Route::post(
-        '/admin/extra-shift-requests/{extraShiftRequest}/confirm',
-        [ExtraShiftRequestController::class, 'confirm']
-    )->name('admin.extra-shift-requests.confirm');
-
-    Route::post(
-        '/admin/extra-shift-requests/{extraShiftRequest}/reject',
-        [ExtraShiftRequestController::class, 'reject']
-    )->name('admin.extra-shift-requests.reject');
-
-    Route::get(
         '/admin/attendance',
         [AdminAttendanceController::class, 'index']
     )->name('admin.attendance.index');
@@ -444,7 +454,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         [AdminAttendanceController::class, 'downloadPdf']
     )->name('admin.attendance.download-pdf');
 
-    // === ADMIN CORRECTION ROUTES ===
     Route::get(
         '/admin/attendance/corrections',
         [AdminAttendanceController::class, 'corrections']
@@ -469,6 +478,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
         '/admin/attendance/{attendance}/reject-overtime',
         [AdminAttendanceController::class, 'rejectOvertime']
     )->name('admin.attendance.reject-overtime');
+
+    Route::get('/admin/attendance/search-summary', [AdminAttendanceController::class, 'searchSummary'])->name('admin.attendance.search-summary');
+    Route::get('/admin/attendance/search-daily', [AdminAttendanceController::class, 'searchDaily'])->name('admin.attendance.search-daily');
+
+    Route::get('/admin/backups', [AdminBackupController::class, 'index'])->name('admin.backups.index');
+    Route::post('/admin/backups', [AdminBackupController::class, 'create'])->name('admin.backups.create');
+    Route::get('/admin/backups/{backup}/download', [AdminBackupController::class, 'download'])->name('admin.backups.download');
+    Route::post('/admin/backups/{backup}/restore', [AdminBackupController::class, 'restore'])->name('admin.backups.restore');
+    Route::delete('/admin/backups/{backup}', [AdminBackupController::class, 'destroy'])->name('admin.backups.destroy');
 });
 
 /*
@@ -498,7 +516,7 @@ Route::post(
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:employee'])->group(function () {
 
     Route::get('/employee/dashboard', function () {
         return view('employee.dashboard');
@@ -530,35 +548,55 @@ Route::middleware(['auth'])->group(function () {
     )->name('employee.my-attendance.correction');
 
     Route::get(
-        '/employee/my-shift-requests',
-        [ExtraShiftRequestController::class, 'employeeMyRequests']
-    )->name('employee.extra-shift-requests.index');
-
-    Route::get(
-        '/employee/shift-offers',
-        [ExtraShiftRequestController::class, 'employeeShiftOffers']
-    )->name('employee.extra-shift-requests.offers');
-
-    Route::post(
-        '/employee/extra-shift-requests',
-        [ExtraShiftRequestController::class, 'employeeStore']
-    )->name('employee.extra-shift-requests.store');
-
-    Route::post(
-        '/employee/extra-shift-requests/{extraShiftRequest}/respond',
-        [ExtraShiftRequestController::class, 'respond']
-    )->name('employee.extra-shift-requests.respond');
-
-    Route::get(
         '/employee/notifications',
-        [ExtraShiftRequestController::class, 'notifications']
+        [EmployeeNotificationController::class, 'notifications']
     )->name('employee.notifications');
 
     Route::get(
         '/employee/notifications/{notification}/open',
-        [ExtraShiftRequestController::class, 'openNotification']
+        [EmployeeNotificationController::class, 'openNotification']
     );
 });
+
+/*
+|--------------------------------------------------------------------------
+| Custom 2FA Challenge Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/two-factor-challenge', function () {
+    return view('auth.two-factor-challenge');
+})->middleware('guest')->name('two-factor.login');
+
+Route::post('/two-factor-challenge', function (\Illuminate\Http\Request $request) {
+    $request->validate(['code' => 'required']);
+    
+    $userId = $request->session()->get('login.id');
+    $user = \App\Models\User::find($userId);
+
+    if (!$user) {
+        return redirect('/login');
+    }
+
+    // GAMITIN ANG CLASS NANG DIRETSO IMBES NA STRING
+    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+    $secret = decrypt($user->two_factor_secret);
+    
+    if ($google2fa->verifyKey($secret, $request->code)) {
+        auth()->login($user);
+        $request->session()->forget('login.id');
+        
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard');
+        } elseif ($user->role === 'employee') {
+            return redirect('/employee/dashboard');
+        }
+        return redirect('/dashboard');
+    }
+
+    return back()->withErrors(['code' => 'The provided two factor authentication code was invalid.']);
+});
+
 
 /*
 |--------------------------------------------------------------------------

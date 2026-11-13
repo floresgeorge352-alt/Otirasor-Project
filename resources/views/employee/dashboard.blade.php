@@ -34,7 +34,6 @@
         .welcome p { color: #666; font-size: 15px; font-weight: 300; }
         .portal-badge { display: inline-block; margin-top: 15px; background: #e8f6f8; color: #0f4c5c; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
 
-        /* NEW BUTTON STYLE */
         .btn-my-attendance {
             display: inline-flex;
             align-items: center;
@@ -83,49 +82,13 @@
         .employee-qr-name { margin-top: 15px; font-size: 16px; font-weight: bold; color: #0f4c5c; }
         .qr-note { margin-top: 8px; font-size: 12px; color: #888; font-weight: 300; }
 
-        .section-heading { color: #0f4c5c; margin-bottom: 10px; font-size: 20px; }
-        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #eef2f5; }
-        .requests-table { width: 100%; border-collapse: collapse; }
-        .requests-table th, .requests-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eef2f5; font-size: 14px; white-space: nowrap; }
-        .requests-table th { background: #f8fcfd; color: #0f4c5c; font-weight: 700; font-family: 'Montserrat', sans-serif; }
-        .requests-table tr:last-child td { border-bottom: none; }
-        .reason-cell { white-space: normal !important; min-width: 180px; }
-        
-        .request-status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-        .status-pending { background: #fff4d8; color: #a36a00; }
-        .status-confirmed, .status-approved, .status-available { background: #e6f7ef; color: #147a4b; }
-        .status-rejected, .status-unavailable { background: #ffe8ec; color: #b52d43; }
-        .status-cancelled { background: #e5e7eb; color: #4b5563; }
-
-        .offer-actions { display: flex; gap: 8px; }
-        .offer-btn { border: none; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .offer-btn.accept { background: #10b981; }
-        .offer-btn.accept:hover { background: #059669; }
-        .offer-btn.decline { background: #ef4444; }
-        .offer-btn.decline:hover { background: #dc2626; }
-        
-        .offer-count { display: inline-block; margin-left: 8px; padding: 3px 10px; border-radius: 20px; background: #ef4444; color: white; font-size: 12px; vertical-align: middle; }
-        .offer-note { color: #6b7280; font-size: 13px; font-style: italic; }
-        .empty-state { padding: 25px; background: #f8fcfd; color: #6b7280; border-radius: 12px; text-align: center; border: 1px dashed #d1d5db; }
-
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        .form-group label { color: #374151; font-size: 14px; font-weight: 600; }
-        .form-group input, .form-group textarea { width: 100%; padding: 14px; border: 1px solid #d1d5db; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 14px; background: #f9fafb; outline: none; transition: 0.3s; }
-        .form-group input:focus, .form-group textarea:focus { border-color: #0f4c5c; background: white; box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1); }
-        .form-group textarea { min-height: 120px; resize: vertical; }
-        .submit-button { background: linear-gradient(135deg, #0f4c5c, #1a7287); color: white; border: none; border-radius: 10px; padding: 15px; font-weight: 700; font-size: 15px; font-family: 'Montserrat', sans-serif; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(15, 76, 92, 0.25); }
-        .submit-button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 76, 92, 0.35); }
-
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; flex-direction: column; gap: 15px; }
             .nav-actions { width: 100%; justify-content: center; }
-            .cards, .form-grid { grid-template-columns: 1fr; }
+            .cards { grid-template-columns: 1fr; }
             .attendance-actions { grid-template-columns: 1fr; }
             .logo-section h2 { font-size: 16px; }
             .container { margin-top: 20px; }
-            .form-group.full-width { grid-column: auto; }
             .welcome h1 { font-size: 24px; }
         }
     </style>
@@ -136,9 +99,6 @@
     @php
         $employee = auth()->user();
         $todayAttendance = \App\Models\Attendance::where('user_id', $employee->id)->whereDate('date', today())->first();
-        $myExtraShiftRequests = \App\Models\ExtraShiftRequest::where('employee_id', $employee->id)->where('request_type', 'employee')->latest()->get();
-        $shiftOffers = \App\Models\ExtraShiftRequest::where('employee_id', $employee->id)->where('request_type', 'admin')->latest()->get();
-        $awaitingOfferCount = $shiftOffers->where('status', 'Pending')->where('employee_response', 'Pending')->count();
     @endphp
 
     <div class="navbar">
@@ -171,7 +131,7 @@
             <p>Welcome to the Otirasor Beach and Resort Employee Portal.</p>
             <span class="portal-badge">EMPLOYEE PORTAL</span>
             
-            {{-- BAGONG BUTTON PARA SA MY ATTENDANCE --}}
+            {{-- BUTTON PARA SA MY ATTENDANCE --}}
             <div>
                 <a href="{{ route('employee.my-attendance') }}" class="btn-my-attendance">
                     📅 View My Attendance History
@@ -254,162 +214,6 @@
                 <div class="employee-qr-name">{{ $employee->name }}</div>
                 <div class="qr-note">Scan this QR code to open your attendance page.</div>
             </div>
-        </div>
-
-        <div class="card info-card" id="shift-offers">
-            <h3 class="section-heading">
-                Shift Offers from Admin
-                @if($awaitingOfferCount > 0)
-                    <span class="offer-count">{{ $awaitingOfferCount }} new</span>
-                @endif
-            </h3>
-            <p class="section-description">The admin may offer you an extra shift. Choose Accept if you are available or Decline if you are not.</p>
-
-            @if($shiftOffers->isEmpty())
-                <div class="empty-state">You have no shift offers from the admin right now.</div>
-            @else
-                <div class="table-wrapper">
-                    <table class="requests-table">
-                        <thead>
-                            <tr>
-                                <th>Shift Date</th>
-                                <th>Schedule</th>
-                                <th>Reason</th>
-                                <th>Your Response</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($shiftOffers as $offer)
-                                @php
-                                    $responseClass = match ($offer->employee_response) {
-                                        'Available' => 'status-available',
-                                        'Unavailable' => 'status-unavailable',
-                                        default => 'status-pending',
-                                    };
-                                    $offerStatusClass = match ($offer->status) {
-                                        'Confirmed', 'Approved' => 'status-confirmed',
-                                        'Rejected' => 'status-rejected',
-                                        'Cancelled' => 'status-cancelled',
-                                        default => 'status-pending',
-                                    };
-                                    $canRespond = $offer->status === 'Pending' && $offer->employee_response === 'Pending';
-                                @endphp
-                                <tr>
-                                    <td>{{ $offer->shift_date ? $offer->shift_date->format('M d, Y') : '—' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($offer->start_time)->format('h:i A') }} – {{ \Carbon\Carbon::parse($offer->end_time)->format('h:i A') }}</td>
-                                    <td class="reason-cell">{{ $offer->reason ?: '—' }}</td>
-                                    <td><span class="request-status {{ $responseClass }}">{{ $offer->employee_response === 'Pending' ? 'Awaiting response' : $offer->employee_response }}</span></td>
-                                    <td><span class="request-status {{ $offerStatusClass }}">{{ $offer->status }}</span></td>
-                                    <td>
-                                        @if($canRespond)
-                                            <div class="offer-actions">
-                                                <form method="POST" action="{{ route('employee.extra-shift-requests.respond', $offer) }}" onsubmit="return confirm('Accept this extra shift?');">
-                                                    @csrf
-                                                    <input type="hidden" name="response" value="Available">
-                                                    <button type="submit" class="offer-btn accept">✓ Accept</button>
-                                                </form>
-                                                <form method="POST" action="{{ route('employee.extra-shift-requests.respond', $offer) }}" onsubmit="return confirm('Decline this extra shift?');">
-                                                    @csrf
-                                                    <input type="hidden" name="response" value="Unavailable">
-                                                    <button type="submit" class="offer-btn decline">✕ Decline</button>
-                                                </form>
-                                            </div>
-                                        @elseif($offer->status === 'Confirmed')
-                                            <span class="offer-note">Shift confirmed by admin</span>
-                                        @elseif($offer->status === 'Rejected')
-                                            <span class="offer-note">Offer was rejected by admin</span>
-                                        @elseif($offer->status === 'Cancelled')
-                                            <span class="offer-note">Offer cancelled</span>
-                                        @elseif($offer->employee_response === 'Available')
-                                            <span class="offer-note">Waiting for admin confirmation</span>
-                                        @elseif($offer->employee_response === 'Unavailable')
-                                            <span class="offer-note">You declined this offer</span>
-                                        @else
-                                            <span class="offer-note">No action available</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-
-        <div class="card info-card" id="extra-shift">
-            <h3 class="section-heading">Request an Extra Shift</h3>
-            <p class="section-description">Need to work an additional shift? Submit your preferred date and time.</p>
-            <form method="POST" action="{{ route('employee.extra-shift-requests.store') }}">
-                @csrf
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="shift_date">Requested Date</label>
-                        <input type="date" id="shift_date" name="shift_date" min="{{ today()->format('Y-m-d') }}" value="{{ old('shift_date') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="start_time">Start Time</label>
-                        <input type="time" id="start_time" name="start_time" value="{{ old('start_time') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="end_time">End Time</label>
-                        <input type="time" id="end_time" name="end_time" value="{{ old('end_time') }}" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="reason">Reason for Extra Shift</label>
-                        <textarea id="reason" name="reason" maxlength="1000" placeholder="Explain why you are requesting an extra shift." required>{{ old('reason') }}</textarea>
-                    </div>
-                    <div class="form-group full-width">
-                        <button type="submit" class="submit-button">Submit Extra Shift Request</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="card info-card" id="my-requests">
-            <h3 class="section-heading">My Extra Shift Requests</h3>
-            <p class="section-description">View the requests you have submitted and check their current status.</p>
-
-            @if($myExtraShiftRequests->isEmpty())
-                <div class="empty-state">You have not submitted any extra-shift requests yet.</div>
-            @else
-                <div class="table-wrapper">
-                    <table class="requests-table">
-                        <thead>
-                            <tr>
-                                <th>Requested Date</th>
-                                <th>Schedule</th>
-                                <th>Reason</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($myExtraShiftRequests as $shiftRequest)
-                                <tr>
-                                    <td>{{ $shiftRequest->shift_date ? \Carbon\Carbon::parse($shiftRequest->shift_date)->format('M d, Y') : '—' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($shiftRequest->start_time)->format('h:i A') }} – {{ \Carbon\Carbon::parse($shiftRequest->end_time)->format('h:i A') }}</td>
-                                    <td class="reason-cell">{{ $shiftRequest->reason ?: '—' }}</td>
-                                    <td>
-                                        @php
-                                            $statusClass = match ($shiftRequest->status) {
-                                                'Approved' => 'status-approved',
-                                                'Confirmed' => 'status-confirmed',
-                                                'Rejected' => 'status-rejected',
-                                                'Cancelled' => 'status-cancelled',
-                                                default => 'status-pending',
-                                            };
-                                        @endphp
-                                        <span class="request-status {{ $statusClass }}">{{ $shiftRequest->status }}</span>
-                                    </td>
-                                    <td>{{ $shiftRequest->created_at ? $shiftRequest->created_at->format('M d, Y') : '—' }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
         </div>
 
     </div>

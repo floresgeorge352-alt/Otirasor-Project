@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\Booking;
 use App\Models\Accommodation;
+use App\Services\AvailabilityService;
+use Illuminate\Http\Request;
 
 class AccommodationController extends Controller
 {
+    public function __construct(private AvailabilityService $availability) {}
+
     public function index(Request $request)
     {
         $checkIn = $request->query('check_in', '');
@@ -47,34 +48,30 @@ class AccommodationController extends Controller
 
         $databaseAccommodations = $query->paginate(12)->withQueryString();
 
-        $bookedAccommodationIds = [];
-        
+        // Build availability map via service (booked + held + status)
+        $availabilityMap = [];
+
         if ($checkIn && $checkOut) {
-            $bookedAccommodationIds = DB::table('booking_accommodation')
-                ->join('bookings', 'bookings.id', '=', 'booking_accommodation.booking_id')
-                ->whereIn('bookings.status', ['Pending', 'Confirmed'])
-                ->where(function($q) use ($checkIn, $checkOut) {
-                    $q->where('bookings.check_in', '<', $checkOut)
-                      ->where('bookings.check_out', '>', $checkIn);
-                })
-                ->pluck('booking_accommodation.accommodation_id')
-                ->unique()
-                ->toArray();
+            $availabilityMap = $this->availability->map(
+                $checkIn,
+                $checkOut,
+                $databaseAccommodations->getCollection()
+            );
         }
 
         $accommodations = $databaseAccommodations->through(
-            function ($accommodation) use ($bookedAccommodationIds) {
-                if ($accommodation->status !== 'available') {
-                    $available = false;
+            function ($accommodation) use ($availabilityMap) {
+                if (! empty($availabilityMap[$accommodation->id])) {
+                    $available = $availabilityMap[$accommodation->id]['available'];
                 } else {
-                    $available = !in_array($accommodation->id, $bookedAccommodationIds);
+                    $available = $accommodation->status === 'available';
                 }
 
                 return [
                     'id' => $accommodation->id,
                     'name' => $accommodation->name,
                     'description' => $accommodation->description,
-                    'amenities' => $accommodation->amenities, // <-- Idinagdag
+                    'amenities' => $accommodation->amenities,
                     'price' => $accommodation->price,
                     'capacity' => $accommodation->capacity,
                     'type' => $accommodation->type,

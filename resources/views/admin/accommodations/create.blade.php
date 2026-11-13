@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Accommodation - Otirasor Beach</title>
+    <title>Edit Accommodation - Otirasor Beach</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
@@ -39,6 +39,11 @@
         .cancel-btn:hover { background: #545b62; }
         
         .image-help { display: block; margin-top: 6px; color: #666; font-size: 13px; }
+
+        .current-image { max-width: 180px; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid #ddd; }
+
+        .maintenance-box { background: #fff7ed; border: 1px solid #fed7aa; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        .maintenance-box h3 { color: #c2410c; margin-bottom: 15px; font-size: 16px; }
     </style>
 </head>
 
@@ -61,7 +66,7 @@
     <a href="/admin/accommodations" class="back-btn">← Back to Accommodations</a>
 
     <div class="form-box">
-        <h1>Add Accommodation</h1>
+        <h1>Edit Accommodation</h1>
 
         @if($errors->any())
             <div class="error">
@@ -74,71 +79,102 @@
             </div>
         @endif
 
-        <form method="POST" action="/admin/accommodations" enctype="multipart/form-data">
+        <form method="POST" action="/admin/accommodations/{{ $accommodation->id }}" enctype="multipart/form-data">
             @csrf
+            @method('PUT')
 
             <div class="form-group">
                 <label for="name">Accommodation Name</label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="Example: Room 1" required>
+                <input type="text" id="name" name="name" value="{{ old('name', $accommodation->name) }}" placeholder="Example: Room 1" required>
             </div>
 
             <div class="form-group">
                 <label for="type">Type</label>
                 <select id="type" name="type" required>
                     <option value="">Select Type</option>
-                    <option value="Room" @selected(old('type') === 'Room')>Room</option>
-                    <option value="Cottage" @selected(old('type') === 'Cottage')>Cottage</option>
-                    <option value="Function Hall" @selected(old('type') === 'Function Hall')>Function Hall</option>
+                    <option value="Room" @selected(old('type', $accommodation->type) === 'Room')>Room</option>
+                    <option value="Cottage" @selected(old('type', $accommodation->type) === 'Cottage')>Cottage</option>
+                    <option value="Function Hall" @selected(old('type', $accommodation->type) === 'Function Hall')>Function Hall</option>
                 </select>
             </div>
 
-            <div class="form-group" id="room_type_group" style="display: none;">
+            <div class="form-group" id="room_type_group" style="display: {{ old('type', $accommodation->type) === 'Room' ? 'block' : 'none' }};">
                 <label for="room_type">Room Type</label>
                 <select id="room_type" name="room_type">
                     <option value="">Select Room Type</option>
-                    <option value="day_use" @selected(old('room_type') === 'day_use')>Day Use</option>
-                    <option value="overnight" @selected(old('room_type') === 'overnight')>Overnight</option>
+                    <option value="day_use" @selected(old('room_type', $accommodation->room_type) === 'day_use')>Day Use</option>
+                    <option value="overnight" @selected(old('room_type', $accommodation->room_type) === 'overnight')>Overnight</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea id="description" name="description" placeholder="Enter accommodation description...">{{ old('description') }}</textarea>
+                <textarea id="description" name="description" placeholder="Enter accommodation description...">{{ old('description', $accommodation->description) }}</textarea>
             </div>
 
-            {{-- AMENITIES INPUT --}}
             <div class="form-group">
                 <label for="amenities">Amenities (comma-separated)</label>
-                <input type="text" id="amenities" name="amenities" value="{{ old('amenities') }}" placeholder="Example: Aircon, WiFi, TV, Hot Shower">
+                <input type="text" id="amenities" name="amenities" value="{{ old('amenities', is_array($accommodation->amenities) ? implode(', ', $accommodation->amenities) : '') }}" placeholder="Example: Aircon, WiFi, TV, Hot Shower">
                 <small class="image-help">Separate each amenity with a comma.</small>
             </div>
 
             <div class="form-group">
                 <label for="price">Price</label>
-                <input type="number" id="price" name="price" value="{{ old('price') }}" min="0" step="0.01" placeholder="0.00" required>
+                <input type="number" id="price" name="price" value="{{ old('price', $accommodation->price) }}" min="0" step="0.01" placeholder="0.00" required>
             </div>
 
             <div class="form-group">
                 <label for="capacity">Capacity</label>
-                <input type="number" id="capacity" name="capacity" value="{{ old('capacity') }}" min="1" placeholder="Number of persons" required>
+                <input type="number" id="capacity" name="capacity" value="{{ old('capacity', $accommodation->capacity) }}" min="1" placeholder="Number of persons" required>
             </div>
 
             <div class="form-group">
                 <label for="image">Accommodation Photo</label>
-                <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
+                @if($accommodation->image)
+                    <img src="{{ asset('storage/' . $accommodation->image) }}" alt="Current Photo" class="current-image">
+                    <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: normal; font-size: 14px;">
+                        <input type="checkbox" name="remove_image" value="1" style="width: auto;">
+                        Remove current image
+                    </label>
+                @endif
+                <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp" style="margin-top: 10px;">
                 <small class="image-help">JPG, JPEG, PNG, or WEBP. Maximum 10MB.</small>
             </div>
 
             <div class="form-group">
                 <label for="status">Status</label>
                 <select id="status" name="status" required>
-                    <option value="available" @selected(old('status', 'available') === 'available')>Available</option>
-                    <option value="unavailable" @selected(old('status') === 'unavailable')>Unavailable</option>
-                    <option value="maintenance" @selected(old('status') === 'maintenance')>Under Maintenance</option>
+                    <option value="available" @selected(old('status', $accommodation->status) === 'available')>Available</option>
+                    <option value="unavailable" @selected(old('status', $accommodation->status) === 'unavailable')>Unavailable</option>
+                    <option value="maintenance" @selected(old('status', $accommodation->status) === 'maintenance')>Under Maintenance</option>
                 </select>
             </div>
 
-            <button type="submit" class="submit-btn">Add Accommodation</button>
+            <!-- MAINTENANCE FIELDS -->
+            <div id="maintenance-fields" class="maintenance-box" style="display: {{ old('status', $accommodation->status) === 'maintenance' ? 'block' : 'none' }};">
+                <h3>🔧 Maintenance Schedule</h3>
+
+                <div class="form-group">
+                    <label for="maintenance_start">Start Date</label>
+                    <input type="date" id="maintenance_start" name="maintenance_start" 
+                           value="{{ old('maintenance_start', $accommodation->maintenance_start ? $accommodation->maintenance_start->format('Y-m-d') : '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="maintenance_end">End Date</label>
+                    <input type="date" id="maintenance_end" name="maintenance_end" 
+                           value="{{ old('maintenance_end', $accommodation->maintenance_end ? $accommodation->maintenance_end->format('Y-m-d') : '') }}">
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="maintenance_reason">Reason</label>
+                    <input type="text" id="maintenance_reason" name="maintenance_reason" 
+                           value="{{ old('maintenance_reason', $accommodation->maintenance_reason) }}" 
+                           placeholder="e.g., Aircon repair, Roof fixing">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Update Accommodation</button>
             <a href="/admin/accommodations" class="cancel-btn">Cancel</a>
         </form>
     </div>
@@ -149,6 +185,8 @@
         const typeField = document.getElementById('type');
         const roomTypeGroup = document.getElementById('room_type_group');
         const roomTypeField = document.getElementById('room_type');
+        const statusField = document.getElementById('status');
+        const maintenanceFields = document.getElementById('maintenance-fields');
 
         function toggleRoomType() {
             if (typeField.value === 'Room') {
@@ -159,8 +197,16 @@
             }
         }
 
+        function toggleMaintenance() {
+            if (statusField.value === 'maintenance') {
+                maintenanceFields.style.display = 'block';
+            } else {
+                maintenanceFields.style.display = 'none';
+            }
+        }
+
         typeField.addEventListener('change', toggleRoomType);
-        toggleRoomType();
+        statusField.addEventListener('change', toggleMaintenance);
     });
 </script>
 

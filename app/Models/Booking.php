@@ -57,6 +57,7 @@ class Booking extends Model
         'refunded_at',
         'refund_reference',
         'refund_message',
+        'refund_proof',
     ];
 
     protected $casts = [
@@ -97,6 +98,14 @@ class Booking extends Model
     public function review(): HasOne
     {
         return $this->hasOne(Review::class);
+    }
+
+    // =========================================================
+    // ✅ BAGONG DAGDAG: Payment Logs Relationship
+    // =========================================================
+    public function paymentLogs()
+    {
+        return $this->hasMany(PaymentLog::class)->latest();
     }
 
     // =========================================================

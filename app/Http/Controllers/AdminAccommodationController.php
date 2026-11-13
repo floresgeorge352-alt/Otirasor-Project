@@ -10,6 +10,17 @@ class AdminAccommodationController extends Controller
 {
     public function index()
     {
+        // Auto-revert sa "available" kapag tapos na ang maintenance_end date
+        Accommodation::where('status', 'maintenance')
+            ->whereNotNull('maintenance_end')
+            ->where('maintenance_end', '<', now()->toDateString())
+            ->update([
+                'status' => 'available',
+                'maintenance_start' => null,
+                'maintenance_end' => null,
+                'maintenance_reason' => null,
+            ]);
+
         $accommodations = Accommodation::orderBy('type')->orderBy('name')->get();
         return view('admin.accommodations.index', compact('accommodations'));
     }
@@ -31,6 +42,9 @@ class AdminAccommodationController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['required', 'in:available,unavailable,maintenance'],
+            'maintenance_start' => ['nullable', 'date'],
+            'maintenance_end' => ['nullable', 'date', 'after_or_equal:maintenance_start'],
+            'maintenance_reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         $imagePath = null;
@@ -50,6 +64,9 @@ class AdminAccommodationController extends Controller
             'capacity' => $request->capacity,
             'image' => $imagePath,
             'status' => $request->status,
+            'maintenance_start' => $request->maintenance_start,
+            'maintenance_end' => $request->maintenance_end,
+            'maintenance_reason' => $request->maintenance_reason,
         ]);
 
         return redirect('/admin/accommodations')->with('success', 'Accommodation added successfully.');
@@ -77,6 +94,9 @@ class AdminAccommodationController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['required', 'in:available,unavailable,maintenance'],
+            'maintenance_start' => ['nullable', 'date'],
+            'maintenance_end' => ['nullable', 'date', 'after_or_equal:maintenance_start'],
+            'maintenance_reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         $imagePath = $accommodation->image;
@@ -105,6 +125,9 @@ class AdminAccommodationController extends Controller
             'capacity' => $request->capacity,
             'image' => $imagePath,
             'status' => $request->status,
+            'maintenance_start' => $request->maintenance_start,
+            'maintenance_end' => $request->maintenance_end,
+            'maintenance_reason' => $request->maintenance_reason,
         ]);
 
         return redirect('/admin/accommodations')->with('success', 'Accommodation updated successfully.');

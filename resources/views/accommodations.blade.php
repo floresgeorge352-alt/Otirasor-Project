@@ -364,6 +364,12 @@
 
                                 @if($accommodation['status'] == 'maintenance')
                                     <p class="maintenance">🚧 Under Maintenance</p>
+                                    @if(!empty($accommodation['maintenance_reason']))
+                                        <p style="font-size: 12px; color: #856404; margin-top: 5px;"><strong>Reason:</strong> {{ $accommodation['maintenance_reason'] }}</p>
+                                    @endif
+                                    @if(!empty($accommodation['maintenance_end']))
+                                        <p style="font-size: 12px; color: #856404;"><strong>Returning on:</strong> {{ \Carbon\Carbon::parse($accommodation['maintenance_end'])->format('M d, Y') }}</p>
+                                    @endif
                                 @elseif($accommodation['status'] == 'unavailable')
                                     <p class="unavailable">❌ Unavailable</p>
                                 @elseif(!$accommodation['available'])

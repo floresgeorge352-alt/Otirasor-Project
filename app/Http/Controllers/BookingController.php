@@ -7,12 +7,16 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Accommodation;
+use App\Models\ReservationHold;
 use App\Notifications\NewBookingNotification;
 use App\Notifications\CancellationRequestedNotification;
+use App\Services\AvailabilityService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class BookingController extends Controller
 {
+    public function __construct(private AvailabilityService $availability) {}
+
     public function create(Request $request)
     {
         $accommodations = $request->query('accommodations', '');
@@ -71,19 +75,15 @@ class BookingController extends Controller
 
         $selectedAccommodations = Accommodation::whereIn('name', $request->accommodations)->get();
 
-        $conflict = Booking::whereIn('status', ['Pending', 'Confirmed'])
-            ->where('check_in', '<', $request->check_out)
-            ->where('check_out', '>', $request->check_in)
-            ->whereHas('accommodations', function ($query) use ($selectedAccommodations) {
-                $query->whereIn('accommodation_id', $selectedAccommodations->pluck('id'));
-            })
-            ->when(auth()->check(), function ($q) {
-                return $q->where('user_id', '!=', auth()->id());
-            })
-            ->exists();
+        // Use AvailabilityService for conflict check (booked + active holds)
+        $conflict = $this->availability->hasConflict(
+            $selectedAccommodations->pluck('id')->all(),
+            $request->check_in,
+            $request->check_out
+        );
 
         if ($conflict) {
-            return back()->withInput()->with('error', 'One or more of the selected accommodations are already booked for those dates.');
+            return back()->withInput()->with('error', 'One or more of the selected accommodations are already booked or on hold for those dates.');
         }
 
         $totalGuests = (int) $request->number_of_adults + (int) $request->number_of_kids;
@@ -213,6 +213,33 @@ class BookingController extends Controller
                 ]);
             }
 
+            // Release any active holds for this user/session
+            ReservationHold::where(function ($q) {
+                $q->where('user_id', auth()->id())
+                  ->orWhere('session_id', request()->session()->getId());
+            })->whereNull('released_at')->update(['released_at' => now()]);
+
+            // === AUTO-LOG INITIAL PAYMENT STATUS ===
+            if ($booking->payment_method === 'GCash') {
+                \App\Models\PaymentLog::create([
+                    'booking_id' => $booking->id,
+                    'user_id' => auth()->id(),
+                    'payment_method' => $booking->payment_method,
+                    'status' => 'For Verification',
+                    'reference_number' => $booking->gcash_reference,
+                    'remarks' => 'Initial GCash payment submitted by customer.',
+                ]);
+            } else {
+                \App\Models\PaymentLog::create([
+                    'booking_id' => $booking->id,
+                    'user_id' => auth()->id(),
+                    'payment_method' => $booking->payment_method,
+                    'status' => 'Not Applicable',
+                    'remarks' => 'Cash payment selected.',
+                ]);
+            }
+            // =========================================
+
             User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
                 $admin->notify(new NewBookingNotification($booking));
             });
@@ -222,6 +249,15 @@ class BookingController extends Controller
 
         \App\Events\BookingCreated::dispatch($booking);
         \App\Events\DashboardStatsUpdated::dispatch();
+
+        // Broadcast availability change
+        \App\Events\AvailabilityUpdated::dispatch([
+            'reason' => 'booking_created',
+            'booking_id' => $booking->id,
+            'accommodation_ids' => $selectedAccommodations->pluck('id')->all(),
+            'check_in' => $booking->check_in,
+            'check_out' => $booking->check_out,
+        ]);
 
         return redirect()->route('booking.confirmation', $booking->id);
     }

@@ -1,476 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Otirasor Beach</title>
+    <title>Admin Dashboard - Otirasor Beach and Resort</title>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
-
-    {{-- Load Vite and Echo for Real-Time --}}
     @vite(['resources/js/app.js'])
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f8fc;
-            color: #243b4a;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        h1, h2, h3 { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+        body { font-family: Arial, Helvetica, sans-serif; background: #f5f8fc; color: #263746; min-height: 100vh; }
+        a { text-decoration: none; }
 
-        /* NAVIGATION (Glassmorphism) */
-        nav {
-            background: rgba(0, 119, 182, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 15px 6%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        nav { background: #023e8a; min-height: 76px; padding: 0 5%; display: flex; justify-content: space-between; align-items: center; gap: 20px; color: white; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12); position: sticky; top: 0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .brand-logo { width: 58px; height: 58px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18)); }
+        .brand-text { color: white; min-width: 0; }
+        .brand-title { font-size: 18px; font-weight: 700; line-height: 1.2; }
+        .brand-subtitle { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+        .nav-links { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+        nav a { color: white; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s ease; }
+        nav a:hover { background: rgba(255, 255, 255, 0.13); }
+        .notification-link { position: relative; }
+        .notification-badge { position: absolute; top: 1px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; background: #e63946; color: white; border-radius: 999px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; line-height: 1; }
+        .logout-btn { background: none; border: none; color: white; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: Arial, Helvetica, sans-serif; transition: 0.2s ease; }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.13); }
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            font-size: 18px;
-            font-weight: 800;
-            font-family: 'Montserrat', sans-serif;
-        }
+        .container { max-width: 1180px; margin: 34px auto; padding: 0 22px 45px; }
+        .welcome { background: white; padding: 28px 30px; border-radius: 14px; margin-bottom: 30px; border: 1px solid #e3eaf1; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.055); border-left: 5px solid #0077b6; }
+        .welcome h1 { color: #023e8a; font-size: 27px; line-height: 1.3; margin-bottom: 8px; }
+        .welcome p { color: #687887; font-size: 14px; line-height: 1.6; }
 
-        .nav-brand img {
-            width: 45px;
-            height: 45px;
-            object-fit: contain;
-            border-radius: 50%;
-            background: white;
-            padding: 2px;
-        }
-
-        nav .nav-links { display: flex; align-items: center; gap: 20px; }
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: 0.3s;
-        }
-        nav a:hover { color: #dff8ff; transform: translateY(-2px); }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            transition: 0.3s;
-        }
-        .logout-btn:hover { color: #dff8ff; }
-
-        /* MAIN CONTAINER */
-        .container {
-            width: 1100px;
-            max-width: 92%;
-            margin: 50px auto;
-            flex: 1;
-        }
-
-        /* WELCOME CARD */
-        .welcome-card {
-            background: linear-gradient(135deg, #ffffff, #f0fbfd);
-            border: 1px solid #dce8ed;
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            border-left: 6px solid #0077b6;
-        }
-
-        .welcome-logo img {
-            width: 90px;
-            height: 90px;
-            object-fit: contain;
-            border-radius: 50%;
-            background: white;
-            padding: 5px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 3px solid #0077b6;
-        }
-
-        .welcome-text h1 {
-            color: #023e8a;
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .welcome-text p {
-            color: #6c7a86;
-            font-size: 15px;
-            font-weight: 300;
-        }
-
-        /* DASHBOARD SUMMARY (UPDATED TO 4 COLUMNS) */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .summary-card {
-            background: white;
-            border: 1px solid #dce8ed;
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .summary-card .icon { font-size: 35px; margin-bottom: 15px; }
-        .summary-card h3 { color: #6c7a86; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
-        .summary-card .value { color: #023e8a; font-size: 28px; font-weight: 800; }
-
-        /* DASHBOARD CARDS (Book Now / My Bookings) */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .dash-card {
-            background: white;
-            border: 1px solid #dce8ed;
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .dash-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        .dash-icon {
-            font-size: 40px;
-            margin-bottom: 20px;
-            background: #eaf8fc;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 15px;
-        }
-
-        .dash-card h2 {
-            color: #023e8a;
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-
-        .dash-card p {
-            color: #6c7a86;
-            font-size: 14px;
-            font-weight: 300;
-            margin-bottom: 25px;
-            flex: 1;
-        }
-
-        .dash-btn {
-            display: inline-block;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #0077b6, #00b4d8);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 14px;
-            font-family: 'Montserrat', sans-serif;
-            transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 119, 182, 0.25);
-            text-align: center;
-            width: 100%;
-        }
-
-        .dash-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 119, 182, 0.35);
-        }
-
-        /* LATEST BOOKING STATUS */
-        .latest-booking-card {
-            background: white;
-            border: 1px solid #dce8ed;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        }
-
-        .latest-booking-card h2 {
-            color: #023e8a;
-            font-size: 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #edf1f5;
-            padding-bottom: 15px;
-        }
+        /* 3 Columns fixed layout */
+        .live-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
         
-        .booking-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-        }
+        .stat-card { background: white; border: 1px solid #e3eaf1; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045); text-decoration: none; display: block; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); border-color: #0077b6; }
+        .stat-card h3 { color: #687887; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .stat-card .number { color: #023e8a; font-size: 28px; font-weight: 800; }
 
-        .booking-info h4 {
-            color: #1f2937;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
+        .section { margin-bottom: 30px; }
+        .section-heading { margin-bottom: 17px; }
+        .section-title { color: #023e8a; font-size: 21px; font-weight: 700; margin-bottom: 5px; }
+        .section-description { color: #7a8793; font-size: 13px; line-height: 1.5; }
 
-        .booking-info p {
-            color: #6b7280;
-            font-size: 13px;
-        }
-        
-        .status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
+        .main-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .main-card { background: white; border: 1px solid #e1e9f0; border-radius: 14px; padding: 21px; min-height: 115px; display: flex; align-items: center; gap: 16px; color: #263746; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; position: relative; }
+        .main-card:hover { transform: translateY(-3px); border-color: #b7d5e9; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.085); }
+        .card-icon { width: 52px; height: 52px; flex-shrink: 0; background: #edf7fd; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 25px; }
+        .card-content { flex: 1; min-width: 0; }
+        .card-content h3 { color: #023e8a; font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+        .card-content p { color: #71808e; font-size: 13px; line-height: 1.5; }
+        .card-arrow { color: #0077b6; font-size: 21px; font-weight: 700; flex-shrink: 0; }
 
-        .status-pending { background: #fff4d8; color: #a36a00; }
+        .recent-card { background: white; border: 1px solid #e1e9f0; border-radius: 14px; padding: 22px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045); }
+        .recent-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
+        .recent-header h3 { color: #023e8a; font-size: 19px; font-weight: 700; }
+        .view-all { color: #0077b6; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .view-all:hover { text-decoration: underline; }
+        .booking-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 8px; border-bottom: 1px solid #edf1f5; color: inherit; transition: background 0.2s ease, padding 0.2s ease; }
+        .booking-row:hover { background: #f7fbfe; padding-left: 14px; padding-right: 14px; }
+        .booking-row:last-child { border-bottom: none; }
+        .booking-info { min-width: 0; flex: 1; }
+        .booking-name { color: #263746; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .booking-details { color: #8a96a1; font-size: 11px; line-height: 1.4; }
+        .status { flex-shrink: 0; padding: 5px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; }
         .status-confirmed { background: #e6f7ef; color: #147a4b; }
-        .status-rejected { background: #ffe8ec; color: #b52d43; }
-        .status-cancelled { background: #e5e7eb; color: #4b5563; }
+        .status-pending { background: #fff4d8; color: #a36a00; }
+        .status-rejected, .status-cancelled { background: #ffe8ec; color: #b52d43; }
+        .booking-arrow { color: #0077b6; font-size: 20px; font-weight: 700; flex-shrink: 0; }
+        .empty-bookings { text-align: center; padding: 28px 15px; color: #8995a0; font-size: 13px; }
 
-        /* FOOTER */
-        footer {
-            text-align: center;
-            padding: 25px;
-            background: #023e8a;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 13px;
-            letter-spacing: 1px;
-            margin-top: auto;
-        }
+        footer { background: #023e8a; color: white; text-align: center; padding: 18px; margin-top: 40px; }
+        footer p { font-size: 12px; opacity: 0.9; }
 
-        /* MOBILE */
-        @media (max-width: 992px) {
-            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 850px) {
+            nav { padding: 12px 20px; flex-wrap: wrap; }
+            .nav-links { width: 100%; justify-content: center; }
+            .main-grid { grid-template-columns: 1fr; }
+            .live-stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (max-width: 768px) {
-            nav { padding: 15px 20px; flex-direction: column; gap: 15px; }
-            .nav-brand { justify-content: center; }
-            nav .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; }
-            .welcome-card { flex-direction: column; text-align: center; padding: 30px 20px; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .dash-card { align-items: center; text-align: center; }
-            .summary-grid { grid-template-columns: 1fr; }
-            .booking-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+        @media (max-width: 600px) {
+            .container { margin-top: 22px; padding: 0 15px 35px; }
+            .brand-title { font-size: 16px; }
+            .brand-subtitle { font-size: 10px; }
+            .brand-logo { width: 50px; height: 50px; }
+            .welcome { padding: 22px; }
+            .welcome h1 { font-size: 22px; }
+            .main-card { padding: 18px; min-height: 105px; }
+            .booking-row { align-items: flex-start; }
+            .status { margin-top: 2px; }
+            .live-stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
+
 <body>
 
-<!-- NAVIGATION -->
 <nav>
-    <div class="nav-brand">
-        <img src="{{ asset('images/otirasor-logo.png') }}" alt="Logo">
-        Otirasor Beach
+    <div class="brand">
+        <div class="brand-logo">
+            <img src="{{ asset('images/otirasor-logo.png') }}?v={{ file_exists(public_path('images/otirasor-logo.png')) ? filemtime(public_path('images/otirasor-logo.png')) : time() }}" alt="Otirasor Beach and Resort Logo">
+        </div>
+        <div class="brand-text">
+            <div class="brand-title">Otirasor Beach and Resort</div>
+            <div class="brand-subtitle">Administration Portal</div>
+        </div>
     </div>
 
     <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/reviews">Reviews</a>
-        
-        <!-- NOTIFICATION BELL -->
-        <a href="{{ route('customer.notifications') }}" style="position: relative; display: inline-flex; align-items: center;">
-            🔔 Notifications
-            <span id="customer-notification-badge" style="position: absolute; top: -8px; right: -10px; background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; {{ auth()->user()->unreadNotifications->count() > 0 ? '' : 'display: none;' }}">
-                {{ auth()->user()->unreadNotifications->count() }}
-            </span>
+        <a href="{{ route('admin.dashboard') }}">🏠 Dashboard</a>
+        <a href="/admin/bookings" style="position: relative; display: inline-flex; align-items: center;">
+            📋 Bookings
+            @if(($pendingBookings ?? 0) > 0)
+                <span style="background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; margin-left: 5px;">{{ $pendingBookings }}</span>
+            @endif
         </a>
-
+        <a href="/admin/notifications" class="notification-link">
+            🔔 Notifications
+            @if (($unreadNotificationsCount ?? 0) > 0)
+                <span class="notification-badge">{{ $unreadNotificationsCount }}</span>
+            @endif
+        </a>
         <form method="POST" action="/logout" style="display:inline;">
             @csrf
-            <button type="submit" class="logout-btn">Logout</button>
+            <button type="submit" class="logout-btn">🚪 Logout</button>
         </form>
     </div>
 </nav>
 
-<!-- MAIN CONTENT -->
 <div class="container">
 
-    <!-- WELCOME CARD -->
-    <div class="welcome-card">
-        <div class="welcome-logo">
-            <img src="{{ asset('images/otirasor-logo.png') }}" alt="Logo">
-        </div>
-        <div class="welcome-text">
-            <h1>Welcome, {{ Auth::user()->name }}!</h1>
-            <p>Welcome to your Otirasor Beach customer dashboard. Manage your bookings and explore our resort.</p>
-        </div>
+    <div class="welcome">
+        <h1>Welcome back, Otirasor Admin! 👋</h1>
+        <p>Manage reservations, accommodations, room availability and resort operations from one place.</p>
     </div>
 
-    @php
-        $userBookings = App\Models\Booking::where('user_id', Auth::id())->get();
-        $totalBookings = $userBookings->count();
-        $latestBooking = $userBookings->sortByDesc('created_at')->first();
-        
-        // Get average rating and total reviews for the Resort
-        $averageRating = App\Models\Review::avg('rating') ?? 0;
-        $totalReviews = App\Models\Review::count();
-    @endphp
-
-    <!-- SUMMARY CARDS -->
-    <div class="summary-grid">
-        <div class="summary-card">
-            <div class="icon">📊</div>
+    <!-- 6 CARDS (3 Columns x 2 Rows) -->
+    <div class="live-stats-grid">
+        <a href="/admin/bookings" class="stat-card">
             <h3>Total Bookings</h3>
-            <div class="value">{{ $totalBookings }}</div>
+            <div class="number" id="total-bookings">{{ $totalBookings }}</div>
+        </a>
+        <a href="/admin/bookings?filter=pending" class="stat-card">
+            <h3>Pending</h3>
+            <div class="number" id="pending-count">{{ $pendingBookings }}</div>
+        </a>
+        <a href="/admin/bookings?filter=confirmed" class="stat-card">
+            <h3>Confirmed</h3>
+            <div class="number" id="confirmed-count">{{ $confirmedBookings }}</div>
+        </a>
+        <div class="stat-card" style="cursor: default;">
+            <h3>Total Guests</h3>
+            <div class="number" id="total-guests">{{ $totalGuests }}</div>
         </div>
-        
-        <div class="summary-card">
-            <div class="icon">🏖️</div>
-            <h3>Book Now</h3>
-            <div class="value" style="font-size: 15px; margin-top: 10px;">
-                <a href="/accommodations" class="dash-btn">Reserve</a>
-            </div>
-        </div>
-        
-        <div class="summary-card">
-            <div class="icon">📋</div>
-            <h3>My Bookings</h3>
-            <div class="value" style="font-size: 15px; margin-top: 10px;">
-                <a href="/my-bookings" class="dash-btn" style="background: #f0ad4e;">View All</a>
-            </div>
+        <a href="/admin/bookings?filter=refund_pending" class="stat-card" style="border-left: 4px solid #ea580c;">
+            <h3>Pending Refunds</h3>
+            <div class="number" style="color: #ea580c;">{{ $pendingRefundsCount ?? 0 }}</div>
+        </a>
+        <a href="/admin/bookings?filter=pending" class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <h3>Pending Cancellations</h3>
+            <div class="number" style="color: #f59e0b;">{{ $pendingCancellationsCount ?? 0 }}</div>
+        </a>
+    </div>
+
+    <div class="section">
+        <div class="section-heading">
+            <h2 class="section-title">Resort Management</h2>
+            <p class="section-description">Select a section below to manage resort operations.</p>
         </div>
 
-        <!-- RESORT RATING CARD -->
-        <div class="summary-card" style="border: 2px solid #fbbf24; background: #fffbeb;">
-            <div class="icon">⭐</div>
-            <h3>Resort Rating</h3>
-            <div class="value" style="color: #d97706; font-size: 26px;">
-                {{ number_format($averageRating, 1) }} / 5
-            </div>
-            <div style="font-size: 13px; color: #92400e; margin-top: 5px; margin-bottom: 15px;">
-                Based on {{ $totalReviews }} reviews
-            </div>
-            <a href="/reviews" class="dash-btn" style="background: #f59e0b; padding: 8px 15px;">View Reviews</a>
+        <div class="main-grid">
+            <a href="/admin/room-status" class="main-card">
+                <div class="card-icon">🏨</div>
+                <div class="card-content">
+                    <h3>Room Status</h3>
+                    <p>View room availability, reservations and occupancy.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="/admin/management" class="main-card">
+                <div class="card-icon">⚙️</div>
+                <div class="card-content">
+                    <h3>Management</h3>
+                    <p>Manage accommodations, reports and resort operations.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="{{ route('admin.employees.index') }}" class="main-card">
+                <div class="card-icon">👥</div>
+                <div class="card-content">
+                    <h3>Employees</h3>
+                    <p>Manage employee accounts and employee information.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="/admin/attendance" class="main-card">
+                <div class="card-icon">🕒</div>
+                <div class="card-content">
+                    <h3>Attendance</h3>
+                    <p>View employee time-in, time-out and attendance records.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="/admin/booking-information" class="main-card">
+                <div class="card-icon">📋</div>
+                <div class="card-content">
+                    <h3>Booking Information</h3>
+                    <p>View booking summaries, guests and reservation details.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="{{ route('admin.analytics') }}" class="main-card" style="border: 2px solid #00b4d8; background: #f0fbfd;">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <h3>View Analytics</h3>
+                    <p>See booking trends and status distribution charts.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="{{ route('admin.payments') }}" class="main-card" style="border: 2px solid #10b981; background: #f0fdf4;">
+                <div class="card-icon">💰</div>
+                <div class="card-content">
+                    <h3>Payment Tracking</h3>
+                    <p>View and verify GCash payments and track resort revenue.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="{{ route('admin.reviews') }}" class="main-card" style="border: 2px solid #fbbf24; background: #fffbeb;">
+                <div class="card-icon">⭐</div>
+                <div class="card-content">
+                    <h3>Guest Reviews</h3>
+                    <p>View guest feedback, ratings, and comments.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="/admin/promotions" class="main-card" style="border: 2px solid #ec4899; background: #fdf2f8;">
+                <div class="card-icon">🎟️</div>
+                <div class="card-content">
+                    <h3>Promotions</h3>
+                    <p>Create and manage promo codes for discounts.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <a href="{{ route('admin.transactions') }}" class="main-card" style="border: 2px solid #8b5cf6; background: #f5f3ff;">
+                <div class="card-icon">💸</div>
+                <div class="card-content">
+                    <h3>Transaction Records</h3>
+                    <p>View all payments, refunds, and net income (with CSV export).</p>
+                </div>
+                <div class="card-arrow">→</div>
+                
+                @if(($pendingRefundsCount ?? 0) > 0)
+                    <span style="position: absolute; top: 15px; right: 15px; background: #ef4444; color: white; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        {{ $pendingRefundsCount }} Refund
+                    </span>
+                @endif
+                @if(($pendingCancellationsCount ?? 0) > 0)
+                    <span style="position: absolute; top: 15px; right: 120px; background: #f97316; color: white; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        {{ $pendingCancellationsCount }} Cancel
+                    </span>
+                @endif
+            </a>
+
+            <!-- BAGONG CARD: REFUND HISTORY -->
+            <a href="{{ route('admin.refunds.history') }}" class="main-card" style="border: 2px solid #ea580c; background: #fff7ed;">
+                <div class="card-icon" style="background: #ffedd5;">📜</div>
+                <div class="card-content">
+                    <h3>Refund History</h3>
+                    <p>View all successfully processed refunds with proofs and references.</p>
+                </div>
+                <div class="card-arrow" style="color: #ea580c;">→</div>
+            </a>
         </div>
     </div>
 
-    <!-- LATEST BOOKING STATUS -->
-    <div class="latest-booking-card">
-        <h2>📌 Latest Booking Status</h2>
-        
-        @if($latestBooking)
-            <div class="booking-item">
-                <div class="booking-info">
-                    <h4>Booking #{{ $latestBooking->id }}</h4>
-                    <p>
-                        @if($latestBooking->accommodations && $latestBooking->accommodations->isNotEmpty())
-                            {{ $latestBooking->accommodations->pluck('name')->join(', ') }}
-                        @else
-                            <em style="color: #9ca3af;">N/A (Old Booking)</em>
-                        @endif
-                    </p>
-                </div>
-                <div>
-                    @if($latestBooking->status === 'Pending')
-                        <span class="status status-pending">Pending</span>
-                    @elseif($latestBooking->status === 'Confirmed')
-                        <span class="status status-confirmed">Confirmed</span>
-                    @elseif($latestBooking->status === 'Rejected')
-                        <span class="status status-rejected">Rejected</span>
-                    @else
-                        <span class="status status-cancelled">{{ $latestBooking->status }}</span>
-                    @endif
-                </div>
+    <div class="section">
+        <div class="recent-card">
+            <div class="recent-header">
+                <h3>📅 Recent Bookings</h3>
+                <a href="/admin/recent-bookings" class="view-all">View All →</a>
             </div>
-        @else
-            <p style="color: #6c7a86; font-size: 14px;">You haven't made any bookings yet. <a href="/accommodations" style="color: #0077b6; font-weight: bold; text-decoration: none;">Book your first stay!</a></p>
-        @endif
+
+            @forelse($recentBookings as $booking)
+                <a href="/admin/bookings?booking_id={{ $booking->id }}" class="booking-row">
+                    <div class="booking-info">
+                        <div class="booking-name">{{ $booking->guest_name }}</div>
+                        <div class="booking-details">Booking #{{ $booking->id }} • Check-in: {{ $booking->check_in }}</div>
+                    </div>
+
+                    @php
+                        $statusClass = match ($booking->status) {
+                            'Confirmed' => 'status-confirmed',
+                            'Pending' => 'status-pending',
+                            'Rejected' => 'status-rejected',
+                            'Cancelled' => 'status-cancelled',
+                            default => 'status-pending',
+                        };
+                    @endphp
+
+                    <span class="status {{ $statusClass }}">{{ $booking->status }}</span>
+                    <span class="booking-arrow">→</span>
+                </a>
+            @empty
+                <div class="empty-bookings">📭 No recent bookings found.</div>
+            @endforelse
+        </div>
     </div>
 
 </div>
 
-<!-- FOOTER -->
 <footer>
-    &copy; {{ date('Y') }} Otirasor Beach. All Rights Reserved.
+    <p>&copy; 2026 Otirasor Beach and Resort. All Rights Reserved.</p>
 </footer>
 
-{{-- REAL-TIME CUSTOMER NOTIFICATION LISTENER --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         if (!window.Echo) {
-            console.warn('Echo is not loaded. Real-time updates disabled.');
+            console.warn('Echo is not loaded.');
             return;
         }
 
         const userId = {{ auth()->id() }};
-        const badge = document.getElementById('customer-notification-badge');
+        const badge = document.querySelector('.notification-badge');
+        const notificationLink = document.querySelector('.notification-link');
 
-        // Listen to the customer's private channel
         window.Echo.private(`App.Models.User.${userId}`)
             .notification((notification) => {
                 console.log('New notification:', notification);
 
-                // Update the badge count
                 if (badge) {
-                    let count = parseInt(badge.textContent.trim()) || 0;
-                    badge.textContent = count + 1;
-                    badge.style.display = 'inline-block';
+                    const currentCount = parseInt(badge.textContent.trim()) || 0;
+                    badge.textContent = currentCount + 1;
+                    badge.style.display = 'flex';
+                } else if (notificationLink) {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'notification-badge';
+                    newBadge.textContent = '1';
+                    notificationLink.appendChild(newBadge);
                 }
 
-                // Show the dynamic Toast Notification
+                if (notification.type === 'attendance_correction') {
+                    alert(notification.message);
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }
+
                 if (window.showToast) {
-                    let toastTitle = 'Booking Update';
-                    
-                    // Dynamically check the notification message
-                    if (notification.message) {
-                        if (notification.message.toLowerCase().includes('confirmed')) {
-                            toastTitle = 'Booking Confirmed!';
-                        } else if (notification.message.toLowerCase().includes('rejected')) {
-                            toastTitle = 'Booking Rejected!';
-                        } else if (notification.message.toLowerCase().includes('cancelled')) {
-                            toastTitle = 'Booking Cancelled!';
-                        }
-                    }
+                    const redirectUrl = notification.booking_id 
+                        ? `/admin/bookings?booking_id=${notification.booking_id}` 
+                        : '/admin/notifications';
 
                     window.showToast(
-                        toastTitle, 
-                        notification.message || `Update for Booking #${notification.booking_id}`, 
-                        '/my-bookings'
+                        'New Notification',
+                        notification.message || 'You have a new notification.',
+                        'info',
+                        redirectUrl
                     );
+                }
+            });
+
+        window.Echo.private('admin.dashboard')
+            .listen('DashboardStatsUpdated', (e) => {
+                console.log('Dashboard Stats Updated:', e.stats);
+
+                if (document.getElementById('pending-count')) {
+                    document.getElementById('pending-count').textContent = e.stats.pendingBookings;
+                }
+                if (document.getElementById('confirmed-count')) {
+                    document.getElementById('confirmed-count').textContent = e.stats.confirmedBookings;
+                }
+                if (document.getElementById('total-bookings')) {
+                    document.getElementById('total-bookings').textContent = e.stats.totalBookings;
+                }
+                if (document.getElementById('total-guests')) {
+                    document.getElementById('total-guests').textContent = e.stats.totalGuests;
                 }
             });
     });

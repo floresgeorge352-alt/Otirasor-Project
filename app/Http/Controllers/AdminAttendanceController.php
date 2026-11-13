@@ -12,7 +12,6 @@ class AdminAttendanceController extends Controller
 {
     /**
      * Helper: compute worked minutes with break deduction.
-     * Bawas lang ang unpaid_break_minutes kung work day ang araw na yun.
      */
     private function computeWorkedMinutes($records, User $employee): int
     {
@@ -37,7 +36,8 @@ class AdminAttendanceController extends Controller
     {
         $month = (int) $request->query('month', now()->month);
         $year  = (int) $request->query('year', now()->year);
-        $date  = $request->query('date');
+        $day   = $request->query('day');
+        $search = trim($request->query('search', ''));
 
         if ($month < 1 || $month > 12) $month = now()->month;
         if ($year < 2000 || $year > 2100) $year = now()->year;
@@ -49,13 +49,26 @@ class AdminAttendanceController extends Controller
             ->orderBy('date', 'desc')
             ->orderBy('time_in', 'desc');
 
-        if ($date) {
-            $query->whereDate('date', $date);
+        if ($day) {
+            $filterDate = Carbon::create($year, $month, (int)$day)->toDateString();
+            $query->whereDate('date', $filterDate);
+        }
+
+        if ($search !== '') {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
         }
 
         $attendances = $query->get();
 
-        $employees = User::where('role', 'employee')->orderBy('name')->get();
+        $employeesQuery = User::where('role', 'employee')->orderBy('name');
+        
+        if ($search !== '') {
+            $employeesQuery->where('name', 'like', "%{$search}%");
+        }
+        
+        $employees = $employeesQuery->get();
         $summaries = [];
 
         foreach ($employees as $employee) {
@@ -69,9 +82,7 @@ class AdminAttendanceController extends Controller
             $totalUndertime = (int) $records->sum('undertime_minutes');
             $totalOvertime  = (int) $records->sum('overtime_minutes');
 
-            // === FIXED: Bawas ang unpaid_break_minutes ===
             $totalWorkedMinutes = $this->computeWorkedMinutes($records, $employee);
-            // ==============================================
 
             $summaries[] = [
                 'employee'          => $employee,
@@ -89,10 +100,88 @@ class AdminAttendanceController extends Controller
             'summaries',
             'month',
             'year',
-            'date',
+            'day',
+            'search',
             'startOfMonth',
             'endOfMonth'
         ));
+    }
+
+    // === BAGONG METHOD PARA SA AJAX MONTHLY SUMMARY ===
+    public function searchSummary(Request $request)
+    {
+        $month = (int) $request->query('month', now()->month);
+        $year  = (int) $request->query('year', now()->year);
+        $search = trim($request->query('search', ''));
+        
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+        $employeesQuery = User::where('role', 'employee')->orderBy('name');
+        if ($search !== '') {
+            $employeesQuery->where('name', 'like', "%{$search}%");
+        }
+        
+        $employees = $employeesQuery->get();
+        $summaries = [];
+
+        foreach ($employees as $employee) {
+            $records = Attendance::where('user_id', $employee->id)
+                ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+                ->get();
+
+            $daysPresent    = $records->whereNotNull('time_in')->count();
+            $daysCompleted  = $records->whereNotNull('time_out')->count();
+            $totalLate      = (int) $records->sum('late_minutes');
+            $totalUndertime = (int) $records->sum('undertime_minutes');
+            $totalOvertime  = (int) $records->sum('overtime_minutes');
+
+            $totalWorkedMinutes = $this->computeWorkedMinutes($records, $employee);
+
+            $summaries[] = [
+                'employee'          => $employee,
+                'days_present'      => $daysPresent,
+                'days_completed'    => $daysCompleted,
+                'late_minutes'      => $totalLate,
+                'undertime_minutes' => $totalUndertime,
+                'overtime_minutes'  => $totalOvertime,
+                'worked_hours'      => round($totalWorkedMinutes / 60, 2),
+            ];
+        }
+
+        return response()->json([
+            'html' => view('admin.attendance._summary_table', compact('summaries'))->render()
+        ]);
+    }
+
+    // === BAGONG METHOD PARA SA AJAX DAILY RECORDS ===
+    public function searchDaily(Request $request)
+    {
+        $month = (int) $request->query('month', now()->month);
+        $year  = (int) $request->query('year', now()->year);
+        $day   = $request->query('day');
+        $search = trim($request->query('search', ''));
+
+        $query = Attendance::with('user')
+            ->orderBy('date', 'desc')
+            ->orderBy('time_in', 'desc');
+
+        if ($day) {
+            $filterDate = Carbon::create($year, $month, (int)$day)->toDateString();
+            $query->whereDate('date', $filterDate);
+        }
+
+        if ($search !== '') {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        $attendances = $query->get();
+
+        return response()->json([
+            'html' => view('admin.attendance._daily_table', compact('attendances'))->render()
+        ]);
     }
 
     public function approveOvertime($id)
@@ -126,7 +215,7 @@ class AdminAttendanceController extends Controller
 
         $employees = User::where('role', 'employee')->orderBy('name')->get();
         $filename = 'Attendance_Summary_' . $startOfMonth->format('F_Y') . '.csv';
-        $controller = $this; // ← para ma-call ang helper sa closure
+        $controller = $this;
 
         $headers = [
             "Content-type"        => "text/csv",
@@ -151,9 +240,7 @@ class AdminAttendanceController extends Controller
                 $totalUndertime = (int) $records->sum('undertime_minutes');
                 $totalOvertime  = (int) $records->sum('overtime_minutes');
 
-                // === FIXED: Bawas ang unpaid_break_minutes ===
                 $totalWorkedMinutes = $controller->computeWorkedMinutes($records, $employee);
-                // ==============================================
 
                 fputcsv($file, [$employee->name, $daysPresent, $daysCompleted, round($totalWorkedMinutes / 60, 2), $totalLate, $totalUndertime, $totalOvertime]);
             }
@@ -189,9 +276,7 @@ class AdminAttendanceController extends Controller
             $totalUndertime = (int) $records->sum('undertime_minutes');
             $totalOvertime  = (int) $records->sum('overtime_minutes');
 
-            // === FIXED: Bawas ang unpaid_break_minutes ===
             $totalWorkedMinutes = $this->computeWorkedMinutes($records, $employee);
-            // ==============================================
 
             $summaries[] = [
                 'employee'          => $employee,
@@ -204,7 +289,7 @@ class AdminAttendanceController extends Controller
             ];
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendance.pdf', compact('summaries', 'startOfMonth', 'endOfMonth'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendance.pdf', compact('summaries', 'startOfMonth', 'endOfMonth', 'month', 'year'));
         $pdf->setPaper('A4', 'landscape');
 
         $filename = 'Attendance_Summary_' . $startOfMonth->format('F_Y') . '.pdf';

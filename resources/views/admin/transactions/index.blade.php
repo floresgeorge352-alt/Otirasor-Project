@@ -20,8 +20,7 @@
         .stat-value { font-size: 24px; font-weight: 800; color: #1e293b; }
         
         .filter-form { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
-        .filter-form select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; }
-        .btn-filter { padding: 10px 20px; background: #023e8a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .filter-form select, .filter-form input[type="text"] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; outline: none; }
         .btn-export { background: #10b981; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; }
         .btn-export:hover { background: #059669; }
         .btn-export-pdf { background: #dc2626; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; }
@@ -54,7 +53,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>💸 Transaction Records</h1>
+            <h1>💸 Transaction Records 
+                @if($date)
+                    — {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
+                @else
+                    — {{ date('F', mktime(0, 0, 0, $month, 1)) }} {{ $year }}
+                @endif
+            </h1>
             <a href="/admin/dashboard" class="back-btn">← Back to Dashboard</a>
         </div>
 
@@ -74,26 +79,43 @@
         </div>
 
         <form method="GET" action="/admin/transactions" class="filter-form">
+            <!-- MONTH DROPDOWN -->
             <select name="month" onchange="this.form.submit()">
                 @for($i = 1; $i <= 12; $i++)
                     <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
                 @endfor
             </select>
+
+            <!-- DAY DROPDOWN -->
+            <select name="day" onchange="this.form.submit()" style="min-width: 80px;">
+                <option value="">Day</option>
+                @for($d = 1; $d <= 31; $d++)
+                    @php
+                        $isValidDay = checkdate($month, $d, $year);
+                    @endphp
+                    @if($isValidDay)
+                        <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>
+                            {{ $d }}
+                        </option>
+                    @endif
+                @endfor
+            </select>
+
+            <!-- YEAR DROPDOWN -->
             <select name="year" onchange="this.form.submit()">
                 @for($y = date('Y'); $y >= date('Y') - 5; $y--)
                     <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                 @endfor
             </select>
-            
+
             <!-- SEARCH BAR WITH INSTANT SEARCH -->
-            <div style="position: relative; flex: 1; min-width: 200px;">
-                <input type="text" name="search" id="searchInput" value="{{ $search ?? '' }}" placeholder="Search by Guest, Booking ID, Ref No..." style="width: 100%; padding: 10px 40px 10px 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; outline: none;">
+            <div style="position: relative; flex: 1; min-width: 200px; margin-left: 10px;">
+                <input type="text" name="search" id="searchInput" value="{{ $search ?? '' }}" placeholder="Search by Guest, Booking ID..." style="width: 100%; padding: 10px 40px 10px 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; outline: none;">
                 <button type="button" id="clearSearch" style="display: {{ $search ? 'block' : 'none' }}; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #9ca3af;">✖</button>
             </div>
-
-            <button type="submit" class="btn-filter">Filter</button>
-            <a href="{{ route('admin.transactions.export', ['month' => $month, 'year' => $year, 'search' => $search]) }}" class="btn-export">📥 Export to CSV</a>
-            <a href="{{ route('admin.transactions.export-pdf', ['month' => $month, 'year' => $year, 'search' => $search]) }}" class="btn-export-pdf">📄 Export to PDF</a>
+            
+            <a href="{{ route('admin.transactions.export', ['month' => $month, 'year' => $year, 'day' => request('day'), 'search' => $search]) }}" class="btn-export">📥 Export to CSV</a>
+            <a href="{{ route('admin.transactions.export-pdf', ['month' => $month, 'year' => $year, 'day' => request('day'), 'search' => $search]) }}" class="btn-export-pdf">📄 Export to PDF</a>
         </form>
 
         <div class="table-container">
@@ -114,7 +136,6 @@
                 <tbody>
                     @forelse($transactions as $t)
                         <tr>
-                            <!-- Pinalitan natin ng check_in para tugma sa filter -->
                             <td>{{ \Carbon\Carbon::parse($t->check_in)->format('M d, Y') }}</td>
                             <td><strong>#{{ $t->id }}</strong></td>
                             <td>{{ $t->guest_name }}</td>
@@ -172,9 +193,8 @@
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearSearch');
         let typingTimer;
-        const doneTypingInterval = 500; // 0.5 seconds delay
+        const doneTypingInterval = 500;
 
-        // Kapag nagta-type, mag-search pagkatapos ng 0.5s
         searchInput.addEventListener('input', function() {
             clearTimeout(typingTimer);
             clearBtn.style.display = this.value ? 'block' : 'none';
@@ -184,7 +204,6 @@
             }, doneTypingInterval);
         });
 
-        // Kapag pinindot ang X, i-clear at i-submit
         clearBtn.addEventListener('click', function() {
             searchInput.value = '';
             clearBtn.style.display = 'none';

@@ -596,13 +596,17 @@
                             <p><strong>Customer Reason:</strong> {{ $booking->refund_request_reason }}</p>
                             
                             <div class="refund-forms-wrapper" onclick="event.stopPropagation()" style="display: block; margin-top: 15px;">
-                                <form method="POST" action="{{ route('admin.bookings.approve-refund', $booking->id) }}" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 15px;">
+                                <form method="POST" action="{{ route('admin.bookings.approve-refund', $booking->id) }}" enctype="multipart/form-data" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 15px;">
                                     @csrf
                                     <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">GCash Reference No. (Required)</label>
                                     <input type="text" name="refund_reference" placeholder="e.g. 1234567890123" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
                                     
                                     <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">Message to Customer (Optional)</label>
                                     <input type="text" name="refund_message" placeholder="e.g. Nai-send na po mga 9:30 PM." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
+
+                                    <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">Upload Refund Proof (Optional)</label>
+                                    <input type="file" name="refund_proof" accept=".jpg,.jpeg,.png,.pdf" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; background: white;">
+                                    <small style="display: block; color: #64748b; margin-bottom: 10px;">Max: 5MB (JPG, PNG, or PDF)</small>
                                     
                                     <button type="submit" class="approve-refund-btn" style="width:100%;" onclick="return confirm('Approve and mark this refund as processed?')">Approve & Mark as Refunded</button>
                                 </form>
@@ -622,6 +626,9 @@
                             <p><strong>GCash Ref:</strong> {{ $booking->refund_reference }}</p>
                             @if($booking->refund_message)
                                 <p><strong>Message to Customer:</strong> {{ $booking->refund_message }}</p>
+                            @endif
+                            @if($booking->refund_proof)
+                                <p><strong>Proof of Refund:</strong> <a href="{{ asset('storage/' . $booking->refund_proof) }}" target="_blank" style="color: #166534; text-decoration: underline; font-weight: bold;">Click to view file</a></p>
                             @endif
                         </div>
                     @elseif($booking->refund_status === 'Rejected')

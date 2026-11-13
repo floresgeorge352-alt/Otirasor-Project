@@ -366,6 +366,13 @@
             background: #faf5ff;
         }
 
+        /* =========================================
+           BACKUPS ACCENT (NEW)
+        ========================================== */
+        .backups-card .card-icon {
+            background: #fef3c7;
+        }
+
 
         /* =========================================
            MOBILE
@@ -667,7 +674,7 @@
 
 
             <!-- =====================================
-                 GALLERY (NEW CARD)
+                 GALLERY
             ====================================== -->
 
             <div class="card gallery-card">
@@ -697,6 +704,43 @@
                     class="btn"
                 >
                     Manage Gallery →
+                </a>
+
+            </div>
+
+
+            <!-- =====================================
+                 DATABASE BACKUPS (NEW CARD)
+            ====================================== -->
+
+            <div class="card backups-card">
+
+                <div>
+
+                    <div class="card-icon">
+                        🗄️
+                    </div>
+
+
+                    <h3>
+                        Database Backups
+                    </h3>
+
+
+                    <p>
+                        Create, download, and restore
+                        database backups. View history
+                        and manage retention.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="{{ route('admin.backups.index') }}"
+                    class="btn"
+                >
+                    Manage Backups →
                 </a>
 
             </div>

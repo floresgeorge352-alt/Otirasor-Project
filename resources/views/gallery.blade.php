@@ -35,22 +35,49 @@
 
         /* GALLERY GRID */
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        
         .gallery-item {
             background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            position: relative; height: 280px; transition: transform 0.3s;
+            position: relative; height: 280px; transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
         }
-        .gallery-item:hover { transform: scale(1.03); }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .gallery-item img { 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            object-position: top; /* <-- IDINAGDAG PARA MAKITA ANG MUKHA */
+            transition: transform 0.5s ease;
+        }
+        .gallery-item:hover img { 
+            transform: scale(1.08); /* Zoom effect */
+        }
         
+        /* TRANSPARENT GRADIENT OVERLAY */
         .gallery-info {
             position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-            padding: 20px; color: white;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+            padding: 30px 20px 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
-        .gallery-title { font-size: 16px; font-weight: 700; margin: 0; font-family: 'Montserrat', sans-serif; }
+        
+        .gallery-title { 
+            font-size: 18px; font-weight: 700; margin: 0; font-family: 'Montserrat', sans-serif; 
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+        
         .gallery-category-badge { 
             display: inline-block; background: #0077b6; color: white; font-size: 10px; 
-            padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 4px 10px; border-radius: 20px; margin-bottom: 8px; 
+            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
+            align-self: flex-start;
+            box-shadow: 0 3px 10px rgba(0, 119, 182, 0.4);
         }
 
         @media (max-width: 768px) {
