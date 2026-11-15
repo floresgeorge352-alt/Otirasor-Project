@@ -27,3 +27,8 @@ laravel.zip
 
 /database/*.sqlite
 /storage/app/public/gcash-proofs/
+
+# === BAGONG IDINAGDAG ===
+*.zip
+/database/database/
+/run_backup.bat

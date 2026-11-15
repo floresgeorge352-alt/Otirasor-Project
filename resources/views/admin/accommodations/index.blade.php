@@ -179,6 +179,15 @@
             background: #023e8a;
         }
 
+        .trash-btn {
+            background: #f97316;
+            color: white;
+        }
+
+        .trash-btn:hover {
+            background: #ea580c;
+        }
+
         /* =========================================
            SUCCESS MESSAGE
         ========================================= */
@@ -729,6 +738,14 @@
                 class="btn back-btn"
             >
                 ← Management
+            </a>
+
+
+            <a
+                href="{{ route('admin.accommodations.trash') }}"
+                class="btn trash-btn"
+            >
+                🗑️ View Trash
             </a>
 
 

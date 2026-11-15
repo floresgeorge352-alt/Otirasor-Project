@@ -19,8 +19,12 @@
         .nav-title strong { color: #023e8a; font-size: 18px; }
         .nav-title span { color: #6b7280; font-size: 12px; }
         .nav-links { display: flex; align-items: center; gap: 8px; }
-        nav a { color: #374151; text-decoration: none; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s ease; }
+        nav a { color: #374151; text-decoration: none; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s ease; position: relative; display: inline-flex; align-items: center; }
         nav a:hover { background: #eff6ff; color: #0077b6; }
+        
+        /* NOTIFICATION BADGE */
+        .notification-badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; margin-left: 5px; display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; }
+
         .logout-btn { background: none; border: none; color: #374151; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: Arial, sans-serif; transition: 0.2s ease; }
         .logout-btn:hover { background: #fff1f2; color: #c62828; }
 
@@ -90,7 +94,12 @@
         <div class="nav-links">
             <a href="/admin/dashboard">🏠 Dashboard</a>
             <a href="/admin/bookings">📋 Bookings</a>
-            <a href="/admin/notifications">🔔 Notifications</a>
+            <a href="/admin/notifications">
+                🔔 Notifications
+                @if(auth()->user()->unreadNotifications->count() > 0)
+                    <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+                @endif
+            </a>
             <form method="POST" action="/logout" style="display:inline;">
                 @csrf
                 <button type="submit" class="logout-btn">🚪 Logout</button>
@@ -110,6 +119,22 @@
                 {{ $notifications->count() }} {{ $notifications->count() == 1 ? 'Notification' : 'Notifications' }}
             </div>
         </div>
+
+        {{-- MARK ALL AS READ BUTTON --}}
+        @if(auth()->user()->unreadNotifications->count() > 0)
+            <form method="POST" action="{{ route('admin.notifications.mark-all-read') }}" style="margin-bottom: 20px;">
+                @csrf
+                <button type="submit" style="background: #0077b6; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 14px;">
+                    ✅ Mark All as Read
+                </button>
+            </form>
+        @endif
+
+        @if(session('success'))
+            <div style="background: #d4edda; color: #155724; padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; font-weight: 600;">
+                {{ session('success') }}
+            </div>
+        @endif
 
         @if($notifications->count() > 0)
             @foreach($notifications as $notification)

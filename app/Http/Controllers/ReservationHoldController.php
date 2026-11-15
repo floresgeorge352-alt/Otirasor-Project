@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\AvailabilityUpdated;
 use App\Models\ReservationHold;
 use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
@@ -16,7 +15,7 @@ class ReservationHoldController extends Controller
         $request->validate([
             'accommodation_ids' => 'required|array|min:1',
             'accommodation_ids.*' => 'integer|exists:accommodations,id',
-            'check_in' => 'required|date',
+            'check_in' => 'required|date|after_or_equal:today',
             'check_out' => 'required|date|after:check_in',
         ]);
 
@@ -26,7 +25,7 @@ class ReservationHoldController extends Controller
 
         if ($this->availability->hasConflict($ids, $checkIn, $checkOut)) {
             return response()->json([
-                'ok' => false,
+                'success' => false,
                 'message' => 'One or more accommodations are no longer available for those dates.',
             ], 409);
         }
@@ -46,16 +45,13 @@ class ReservationHoldController extends Controller
             'expires_at' => now()->addMinutes(ReservationHold::holdDurationMinutes()),
         ]);
 
-        AvailabilityUpdated::dispatch([
-            'reason' => 'hold_created',
-            'hold_id' => $hold->id,
-            'accommodation_ids' => $ids,
-            'check_in' => $checkIn,
-            'check_out' => $checkOut,
-        ]);
+        // DITO ANG MALAKING PAGBABAGO: I-broadcast sa per-accommodation channel
+        foreach ($ids as $id) {
+            $this->availability->notifyChange((int) $id, false);
+        }
 
         return response()->json([
-            'ok' => true,
+            'success' => true,
             'hold_id' => $hold->id,
             'expires_at' => $hold->expires_at->toIso8601String(),
             'hold_minutes' => ReservationHold::holdDurationMinutes(),
@@ -73,15 +69,12 @@ class ReservationHoldController extends Controller
         if ($hold->isActive()) {
             $hold->update(['released_at' => now()]);
 
-            AvailabilityUpdated::dispatch([
-                'reason' => 'hold_released',
-                'hold_id' => $hold->id,
-                'accommodation_ids' => $hold->accommodation_ids,
-                'check_in' => $hold->check_in->toDateString(),
-                'check_out' => $hold->check_out->toDateString(),
-            ]);
+            // I-broadcast na available na ulit
+            foreach ($hold->accommodation_ids as $id) {
+                $this->availability->notifyChange((int) $id, true);
+            }
         }
 
-        return response()->json(['ok' => true]);
+        return response()->json(['success' => true]);
     }
 }

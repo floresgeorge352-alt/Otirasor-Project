@@ -16,3 +16,8 @@ Schedule::command('db:backup --cleanup')
     ->dailyAt('02:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/backup.log'));
+
+// === BAGONG IDINAGDAG: Booking Reminders ===
+Schedule::command('reminders:bookings')
+    ->dailyAt('08:00')
+    ->appendOutputTo(storage_path('logs/reminders.log'));

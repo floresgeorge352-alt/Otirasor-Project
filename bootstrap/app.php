@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\Events\Failed;
+use App\Listeners\LogFailedLogin;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,12 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         // === MGA CUSTOM MIDDLEWARE ALIAS ===
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'role'  => \App\Http\Middleware\RoleMiddleware::class, // <-- IDINAGDAG NATIN ITO
+            'role'  => \App\Http\Middleware\RoleMiddleware::class, 
         ]);
+
+        // === IDINAGDAG PARA SA SECURITY HEADERS ===
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
         $middleware->trustProxies(at: '*');
     })
+    ->withEvents(discover: [
+        __DIR__.'/../app/Listeners', // Awtomatikong hahanapin ang mga listeners
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Idagdag natin ang custom event listener para sa Failed login
+        $events = app('events');
+        $events->listen(
+            Failed::class,
+            LogFailedLogin::class
+        );
     })
     ->create();

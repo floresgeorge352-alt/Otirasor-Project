@@ -9,9 +9,12 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Poppins', sans-serif; background: #f4f7fb; padding: 30px; }
         .container { max-width: 900px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
         .header h1 { color: #023e8a; font-size: 28px; }
+        .header-actions { display: flex; gap: 10px; }
         .back-btn { background: #6c757d; color: white; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; }
+        .trash-btn { background: #f97316; color: white; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; }
+        .trash-btn:hover { background: #ea580c; }
         
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .card h2 { color: #023e8a; margin-bottom: 15px; font-size: 20px; }
@@ -46,7 +49,10 @@
     <div class="container">
         <div class="header">
             <h1>🎟️ Promotions & Discounts</h1>
-            <a href="/admin/dashboard" class="back-btn">← Back to Dashboard</a>
+            <div class="header-actions">
+                <a href="{{ route('admin.promotions.trash') }}" class="trash-btn">🗑️ View Trash</a>
+                <a href="/admin/dashboard" class="back-btn">← Back to Dashboard</a>
+            </div>
         </div>
 
         @if(session('success'))

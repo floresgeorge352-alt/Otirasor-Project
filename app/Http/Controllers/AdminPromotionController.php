@@ -42,7 +42,31 @@ class AdminPromotionController extends Controller
 
     public function destroy(Promotion $promotion)
     {
-        $promotion->delete();
+        $promotion->delete(); // Soft delete
         return back()->with('success', 'Promotion deleted successfully.');
+    }
+
+    // === SOFT DELETE: TRASH & RESTORE ===
+
+    public function trash()
+    {
+        $promotions = Promotion::onlyTrashed()->orderBy('deleted_at', 'desc')->get();
+        return view('admin.promotions.trash', compact('promotions'));
+    }
+
+    public function restore($id)
+    {
+        $promotion = Promotion::withTrashed()->findOrFail($id);
+        $promotion->restore();
+
+        return back()->with('success', 'Promotion restored successfully.');
+    }
+
+    public function forceDelete($id)
+    {
+        $promotion = Promotion::withTrashed()->findOrFail($id);
+        $promotion->forceDelete();
+
+        return back()->with('success', 'Promotion permanently deleted.');
     }
 }

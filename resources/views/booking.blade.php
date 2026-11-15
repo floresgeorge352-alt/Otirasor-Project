@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Otirasor Beach and Resort - Booking</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,6 +146,11 @@
     <div class="page-badge">🌴 RESERVATION</div>
     <h1>Complete Your Booking</h1>
     <p>Provide your details below to submit your reservation at Otirasor Beach and Resort.</p>
+    
+    <!-- BAGONG TIMER BANNER -->
+    <div id="hold-timer-banner" style="display: none; margin: 20px auto 0; max-width: 500px; background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 12px; font-weight: 600; color: #856404;">
+        ⏳ Your slots are reserved for: <span id="hold-countdown" style="font-family: monospace; font-size: 18px; font-weight: bold; color: #d93025;">15:00</span>
+    </div>
 </div>
 
 <div class="container">
@@ -381,6 +387,12 @@
 
                 <div class="button-area">
                     <button type="submit" class="submit-btn">Continue Booking</button>
+                    
+                    <!-- BAGONG CANCEL BUTTON -->
+                    <button type="button" id="cancel-hold-btn" onclick="cancelHold()" style="display: none; width: 100%; height: 52px; margin-top: 10px; background: #fff0f0; color: #c0392b; border: 1px solid #f2b8b5; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;">
+                        Cancel & Release Slot
+                    </button>
+
                     <a href="/accommodations" class="back-btn">← Back to Accommodations</a>
                 </div>
             </div>
@@ -571,6 +583,87 @@
     recalc();
     if (promoInput && promoInput.value.trim() !== '') {
         applyPromo();
+    }
+
+    // ===== BAGONG HOLD TIMER & CANCEL LOGIC =====
+    let holdTimerInterval = null;
+    let currentHoldId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // I-check kung may active hold sa session
+        fetch('/api/active-hold')
+            .then(res => res.json())
+            .then(data => {
+                if (data.active && data.hold) {
+                    currentHoldId = data.hold.id;
+                    
+                    // Ipakita ang timer at cancel button
+                    const timerBanner = document.getElementById('hold-timer-banner');
+                    const cancelBtn = document.getElementById('cancel-hold-btn');
+                    if (timerBanner) timerBanner.style.display = 'block';
+                    if (cancelBtn) cancelBtn.style.display = 'block';
+
+                    // Simulan ang countdown
+                    const expiresAt = new Date(data.hold.expires_at).getTime();
+                    
+                    function updateTimer() {
+                        const now = new Date().getTime();
+                        const distance = expiresAt - now;
+
+                        if (distance < 0) {
+                            clearInterval(holdTimerInterval);
+                            const countdownEl = document.getElementById('hold-countdown');
+                            if (countdownEl) {
+                                countdownEl.textContent = "EXPIRED";
+                                countdownEl.style.color = "#c0392b";
+                            }
+                            alert('Your hold has expired. Please select your accommodations again.');
+                            window.location.href = '/accommodations';
+                            return;
+                        }
+
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                        const countdownEl = document.getElementById('hold-countdown');
+                        if (countdownEl) {
+                            countdownEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+                            
+                            // Mag-ingay kung 1 minuto na lang
+                            if (minutes < 1) {
+                                countdownEl.style.color = "#c0392b";
+                            }
+                        }
+                    }
+
+                    updateTimer(); // Initial call
+                    holdTimerInterval = setInterval(updateTimer, 1000);
+                }
+            })
+            .catch(err => console.error('Error fetching hold status:', err));
+    });
+
+    // Function para i-cancel ang hold
+    function cancelHold() {
+        if (!currentHoldId) return;
+        if (!confirm('Are you sure you want to cancel? Your slot will be released.')) return;
+
+        fetch('/reservation-holds/' + currentHoldId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            clearInterval(holdTimerInterval);
+            window.location.href = '/accommodations';
+        })
+        .catch(err => {
+            console.error('Cancel error:', err);
+            alert('Could not release hold. Please try again.');
+        });
     }
 </script>
 </body>

@@ -380,8 +380,9 @@
                 }
             });
 
+        // DITO ANG TAMANG LISTENER
         window.Echo.private('admin.dashboard')
-            .listen('DashboardStatsUpdated', (e) => {
+            .listen('.stats.updated', (e) => {
                 console.log('Dashboard Stats Updated:', e.stats);
 
                 if (document.getElementById('pending-count')) {

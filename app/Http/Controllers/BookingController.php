@@ -63,7 +63,16 @@ class BookingController extends Controller
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
             'payment_method' => 'required|in:Cash,GCash',
-            'gcash_reference' => 'nullable|required_if:payment_method,GCash|digits:13',
+            'gcash_reference' => [
+                'nullable',
+                'required_if:payment_method,GCash',
+                'digits:13',
+                function ($attribute, $value, $fail) {
+                    if ($value && \App\Models\Booking::where('gcash_reference', $value)->exists()) {
+                        $fail('The GCash reference number has already been used.');
+                    }
+                },
+            ],
             'gcash_proof' => 'nullable|required_if:payment_method,GCash|image|mimes:jpg,jpeg,png|max:5120',
             'accommodations' => 'required|array|min:1',
             'swimming_pool' => 'nullable|boolean',
@@ -250,14 +259,10 @@ class BookingController extends Controller
         \App\Events\BookingCreated::dispatch($booking);
         \App\Events\DashboardStatsUpdated::dispatch();
 
-        // Broadcast availability change
-        \App\Events\AvailabilityUpdated::dispatch([
-            'reason' => 'booking_created',
-            'booking_id' => $booking->id,
-            'accommodation_ids' => $selectedAccommodations->pluck('id')->all(),
-            'check_in' => $booking->check_in,
-            'check_out' => $booking->check_out,
-        ]);
+        // I-broadcast ang availability para mag-update agad sa ibang customers
+        foreach ($selectedAccommodations as $acc) {
+            $this->availability->notifyChange($acc->id, false);
+        }
 
         return redirect()->route('booking.confirmation', $booking->id);
     }

@@ -104,11 +104,12 @@
         }
 
         .recovery-link {
-            display: block;
+            display: inline-block;
             margin-top: 20px;
             font-size: 13px;
             color: #6b7280;
             text-decoration: none;
+            cursor: pointer;
         }
 
         .recovery-link:hover {
@@ -120,7 +121,6 @@
 <body>
 
     <div class="card">
-        <!-- Idinagdag ang logo mo para may branding -->
         <img src="{{ asset('images/otirasor-logo.png') }}" alt="Otirasor Beach Logo" class="logo">
 
         <h2>Two-Factor Security</h2>
@@ -129,6 +129,7 @@
             Please enter the 6-digit authentication code from your Google Authenticator app to continue.
         </p>
 
+        {{-- FORM PARA SA 6-DIGIT CODE --}}
         <form method="POST" action="/two-factor-challenge">
             @csrf
 
@@ -144,8 +145,8 @@
                     autofocus 
                     autocomplete="one-time-code"
                 >
-                @if ($errors->any())
-                    <span class="error-msg">{{ $errors->first() }}</span>
+                @if ($errors->has('code'))
+                    <span class="error-msg">{{ $errors->first('code') }}</span>
                 @endif
             </div>
 
@@ -154,7 +155,35 @@
             </button>
         </form>
 
-        <a href="{{ url('/login') }}" class="recovery-link">← Back to Login</a>
+        {{-- LINK PARA SA RECOVERY CODE --}}
+        <a href="#" onclick="document.getElementById('recovery-form').style.display='block'; this.style.display='none'; return false;" class="recovery-link" id="recovery-link">
+            Use a recovery code
+        </a>
+
+        {{-- FORM PARA SA RECOVERY CODE (Hidden by default) --}}
+        <form method="POST" action="/two-factor-challenge" id="recovery-form" style="display: none; margin-top: 20px;">
+            @csrf
+            <div class="input-group">
+                <label for="recovery_code" style="text-align: center; display: block;">Recovery Code</label>
+                <input 
+                    id="recovery_code" 
+                    type="text" 
+                    name="recovery_code" 
+                    placeholder="XXXX-XXXX" 
+                    required
+                    style="text-align: center; letter-spacing: 2px; font-size: 14px;"
+                >
+                @if ($errors->has('recovery_code'))
+                    <span class="error-msg" style="text-align: center;">{{ $errors->first('recovery_code') }}</span>
+                @endif
+            </div>
+            <button type="submit" class="btn" style="background: #64748b;">
+                Use Recovery Code
+            </button>
+        </form>
+
+        {{-- BACK TO LOGIN --}}
+        <a href="{{ url('/login') }}" class="recovery-link" style="display: block; margin-top: 25px;">← Back to Login</a>
     </div>
 
 </body>

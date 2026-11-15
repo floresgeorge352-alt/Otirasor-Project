@@ -139,8 +139,37 @@ class AdminAccommodationController extends Controller
             Storage::disk('public')->delete($accommodation->image);
         }
 
-        $accommodation->delete();
+        $accommodation->delete(); // Soft delete na ngayon
 
         return redirect('/admin/accommodations')->with('success', 'Accommodation deleted successfully.');
+    }
+
+    // === SOFT DELETE: TRASH & RESTORE ===
+
+    public function trash()
+    {
+        $accommodations = Accommodation::onlyTrashed()->orderBy('deleted_at', 'desc')->get();
+        return view('admin.accommodations.trash', compact('accommodations'));
+    }
+
+    public function restore($id)
+    {
+        $accommodation = Accommodation::withTrashed()->findOrFail($id);
+        $accommodation->restore();
+
+        return back()->with('success', 'Accommodation restored successfully.');
+    }
+
+    public function forceDelete($id)
+    {
+        $accommodation = Accommodation::withTrashed()->findOrFail($id);
+
+        if ($accommodation->image && Storage::disk('public')->exists($accommodation->image)) {
+            Storage::disk('public')->delete($accommodation->image);
+        }
+
+        $accommodation->forceDelete();
+
+        return back()->with('success', 'Accommodation permanently deleted.');
     }
 }

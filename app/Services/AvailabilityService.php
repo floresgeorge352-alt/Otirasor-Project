@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\AccommodationAvailabilityChanged;
 use App\Models\Accommodation;
 use App\Models\Booking;
 use App\Models\ReservationHold;
@@ -113,5 +114,40 @@ class AvailabilityService
         ksort($map);
 
         return md5(json_encode($map));
+    }
+
+    /**
+     * Broadcast availability change for a single accommodation.
+     */
+    public function notifyChange(int $accommodationId, bool $available): void
+    {
+        broadcast(new AccommodationAvailabilityChanged($accommodationId, $available));
+    }
+
+    /**
+     * Broadcast availability change for all accommodations in a booking.
+     * Called after approve / reject / checkout / cancel / no-show.
+     */
+    public function notifyBooking(Booking $booking, bool $available): void
+    {
+        $rooms = $booking->accommodations()->get();
+
+        if ($rooms->isNotEmpty()) {
+            foreach ($rooms as $room) {
+                $this->notifyChange($room->id, $available);
+            }
+            return;
+        }
+
+        // Fallback: comma-separated accommodation names
+        $names = array_filter(array_map('trim', explode(',', $booking->accommodations ?? '')));
+        if (empty($names)) {
+            return;
+        }
+
+        $ids = Accommodation::whereIn('name', $names)->pluck('id');
+        foreach ($ids as $id) {
+            $this->notifyChange((int) $id, $available);
+        }
     }
 }

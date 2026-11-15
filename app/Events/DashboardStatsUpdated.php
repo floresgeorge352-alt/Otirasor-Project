@@ -32,6 +32,11 @@ class DashboardStatsUpdated implements ShouldBroadcast
         return [new PrivateChannel('admin.dashboard')];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'stats.updated';
+    }
+
     public function broadcastWith(): array
     {
         return [

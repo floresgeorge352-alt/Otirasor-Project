@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Otirasor Beach and Resort - Book Now</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    @vite(['resources/js/app.js'])
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,10 +116,11 @@
         .room-content p { line-height: 1.6; color: #667983; font-size: 14px; margin-bottom: 10px; font-weight: 300; }
         .price { font-size: 22px !important; font-weight: 800 !important; color: #008f73 !important; margin-top: 15px; margin-bottom: 5px; }
         
-        .available { display: inline-block; background: #e5f8ef; color: #16805d !important; padding: 8px 14px; border-radius: 30px; font-weight: 700; font-size: 13px !important; }
-        .maintenance { display: inline-block; background: #fff3cd; color: #856404 !important; padding: 8px 14px; border-radius: 30px; font-weight: 700; font-size: 13px !important; }
-        .unavailable { display: inline-block; background: #e2e3e5; color: #383d41 !important; padding: 8px 14px; border-radius: 30px; font-weight: 700; font-size: 13px !important; }
-        .booked { display: inline-block; background: #fff0f0; color: #d33b3b !important; padding: 8px 14px; border-radius: 30px; font-weight: 700; font-size: 13px !important; }
+        .availability-badge { display: inline-block; padding: 8px 14px; border-radius: 30px; font-weight: 700; font-size: 13px !important; }
+        .availability-badge.available { background: #e5f8ef; color: #16805d !important; }
+        .availability-badge.maintenance { background: #fff3cd; color: #856404 !important; }
+        .availability-badge.unavailable { background: #e2e3e5; color: #383d41 !important; }
+        .availability-badge.booked { background: #fff0f0; color: #d33b3b !important; }
 
         .select-box { margin-top: 20px; padding-top: 20px; border-top: 1px solid #edf2f4; }
         .select-box label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: #006994; font-size: 15px; }
@@ -326,7 +330,7 @@
 
                 <div class="rooms">
                     @forelse($accommodations as $accommodation)
-                        <div class="room">
+                        <div class="room" data-accommodation-id="{{ $accommodation['id'] }}">
                             <div class="room-image">
                                 @if(!empty($accommodation['image']))
                                     <img src="{{ asset('storage/' . $accommodation['image']) }}" alt="{{ $accommodation['name'] }}">
@@ -362,27 +366,30 @@
                                     @if($currentCategory === 'rooms' && $roomType === 'day_use') / day @endif
                                 </p>
 
-                                @if($accommodation['status'] == 'maintenance')
-                                    <p class="maintenance">🚧 Under Maintenance</p>
-                                    @if(!empty($accommodation['maintenance_reason']))
-                                        <p style="font-size: 12px; color: #856404; margin-top: 5px;"><strong>Reason:</strong> {{ $accommodation['maintenance_reason'] }}</p>
+                                <div class="status-container" data-status="{{ $accommodation['status'] }}" data-available="{{ $accommodation['available'] ? '1' : '0' }}">
+                                    @if($accommodation['status'] == 'maintenance')
+                                        <p class="availability-badge maintenance">🚧 Under Maintenance</p>
+                                        @if(!empty($accommodation['maintenance_reason']))
+                                            <p style="font-size: 12px; color: #856404; margin-top: 5px;"><strong>Reason:</strong> {{ $accommodation['maintenance_reason'] }}</p>
+                                        @endif
+                                        @if(!empty($accommodation['maintenance_end']))
+                                            <p style="font-size: 12px; color: #856404;"><strong>Returning on:</strong> {{ \Carbon\Carbon::parse($accommodation['maintenance_end'])->format('M d, Y') }}</p>
+                                        @endif
+                                    @elseif($accommodation['status'] == 'unavailable')
+                                        <p class="availability-badge unavailable">❌ Unavailable</p>
+                                    @elseif(!$accommodation['available'])
+                                        <p class="availability-badge booked">✕ Already Booked</p>
+                                    @else
+                                        <p class="availability-badge available">✓ Available</p>
                                     @endif
-                                    @if(!empty($accommodation['maintenance_end']))
-                                        <p style="font-size: 12px; color: #856404;"><strong>Returning on:</strong> {{ \Carbon\Carbon::parse($accommodation['maintenance_end'])->format('M d, Y') }}</p>
-                                    @endif
-                                @elseif($accommodation['status'] == 'unavailable')
-                                    <p class="unavailable">❌ Unavailable</p>
-                                @elseif(!$accommodation['available'])
-                                    <p class="booked">✕ Already Booked</p>
-                                @else
-                                    <p class="available">✓ Available</p>
-                                    <div class="select-box">
-                                        <label>
-                                            <input type="checkbox" name="accommodations[]" value="{{ $accommodation['name'] }}" @checked(in_array($accommodation['name'], $selectedAccommodations))>
-                                            Select this accommodation
-                                        </label>
-                                    </div>
-                                @endif
+                                </div>
+
+                                <div class="select-box" @if(!$accommodation['available'] || $accommodation['status'] !== 'available') style="display:none;" @endif>
+                                    <label>
+                                        <input type="checkbox" name="accommodations[]" value="{{ $accommodation['name'] }}" @checked(in_array($accommodation['name'], $selectedAccommodations))>
+                                        Select this accommodation
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -575,7 +582,7 @@
         return true;
     }
 
-    function goToBooking() {
+    async function goToBooking() {
         const selected = getSelected();
         if (selected.length === 0) {
             alert('Please select at least one available accommodation.');
@@ -591,7 +598,62 @@
             return;
         }
 
-        window.location.href = '/booking?accommodations=' + encodeURIComponent(selected.join(',')) + '&check_in=' + encodeURIComponent(checkIn) + '&check_out=' + encodeURIComponent(checkOut);
+        // Kunin ang IDs ng mga napiling accommodation base sa checkbox
+        const selectedIds = [];
+        document.querySelectorAll('input[name="accommodations[]"]:checked').forEach(cb => {
+            const card = cb.closest('[data-accommodation-id]');
+            if (card) {
+                selectedIds.push(card.dataset.accommodationId);
+            }
+        });
+
+        if (selectedIds.length === 0) {
+            alert('Could not find accommodation IDs. Please refresh the page and try again.');
+            return;
+        }
+
+        // I-disable ang button para hindi makapag-double click
+        const btn = document.querySelector('.continue-btn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Holding your slots...';
+        btn.style.opacity = '0.7';
+
+        try {
+            const response = await fetch('/reservation-holds', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    accommodation_ids: selectedIds,
+                    check_in: checkIn,
+                    check_out: checkOut
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Success! I-redirect sa booking page
+                window.location.href = '/booking?accommodations=' + encodeURIComponent(selected.join(',')) + '&check_in=' + encodeURIComponent(checkIn) + '&check_out=' + encodeURIComponent(checkOut);
+            } else {
+                alert(data.message || 'Failed to hold accommodation. Please try again.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+                btn.style.opacity = '1';
+                // I-refresh ang page para makita ang updated status
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Hold error:', error);
+            alert('Network error. Please check your connection and try again.');
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.opacity = '1';
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {

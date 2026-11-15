@@ -21,19 +21,30 @@
         .nav-title strong { color: #023e8a; font-size: 18px; font-family: 'Montserrat', sans-serif; }
         .nav-title span { color: #6b7280; font-size: 12px; }
         .nav-links { display: flex; align-items: center; gap: 8px; }
-        nav a { color: #374151; text-decoration: none; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        nav a { color: #374151; text-decoration: none; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; position: relative; display: inline-flex; align-items: center; }
         nav a:hover { background: #eff6ff; color: #0077b6; }
+        
+        .notification-badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; margin-left: 5px; display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; }
+
         .logout-btn { background: none; border: none; color: #374151; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; transition: 0.2s; }
         .logout-btn:hover { background: #fff1f2; color: #c62828; }
 
         .container { max-width: 1150px; margin: 35px auto; padding: 0 20px 40px; }
 
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 18px; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 18px; flex-wrap: wrap; }
         .page-header-left h1 { color: #023e8a; font-size: 30px; margin-bottom: 7px; font-family: 'Montserrat', sans-serif; }
         .page-header-left p { color: #6b7280; font-size: 14px; }
 
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
         .back-btn { display: inline-flex; align-items: center; gap: 7px; background: #ffffff; color: #0077b6; border: 1px solid #dbeafe; text-decoration: none; padding: 10px 16px; border-radius: 9px; font-weight: 600; font-size: 14px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .back-btn:hover { background: #eff6ff; }
+
+        .export-csv-btn { display: inline-flex; align-items: center; gap: 7px; background: #10b981; color: white; text-decoration: none; padding: 10px 16px; border-radius: 9px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+        .export-csv-btn:hover { background: #059669; }
+
+        .export-pdf-btn { display: inline-flex; align-items: center; gap: 7px; background: #ef4444; color: white; text-decoration: none; padding: 10px 16px; border-radius: 9px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+        .export-pdf-btn:hover { background: #dc2626; }
 
         .booking-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; padding: 5px 0; }
         .filter-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 15px; border-radius: 9px; border: 1px solid #e5e7eb; background: #ffffff; color: #374151; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s ease; }
@@ -48,6 +59,7 @@
         .checkedout-filter.active { background: #8b5cf6; border-color: #8b5cf6; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); }
         .completed-filter.active { background: #059669; border-color: #059669; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2); }
         .refundpending-filter.active { background: #ea580c; border-color: #ea580c; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2); }
+        .pendingcancellation-filter.active { background: #d97706; border-color: #d97706; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2); }
 
         .booking-search { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; padding: 12px 16px; background: #ffffff; border: 1px solid #dbe5ef; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         .booking-search input { width: 100%; min-width: 0; padding: 4px 0; border: none; outline: none; background: transparent; color: #183b60; font-family: 'Poppins', sans-serif; font-size: 15px; }
@@ -75,6 +87,7 @@
         .no-show { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
         
         .refund-pending { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .pending-cancellation { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
         .booking-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
         .summary-item { background: #f8fafc; border-radius: 10px; padding: 12px; min-width: 0; border: 1px solid #f1f5f9; }
@@ -254,8 +267,18 @@
 
     <div class="nav-links">
         <a href="/admin/dashboard">🏠 Dashboard</a>
-        <a href="/admin/bookings">📋 Bookings</a>
-        <a href="/admin/notifications">🔔 Notifications</a>
+        <a href="/admin/bookings">
+            📋 Bookings
+            @if(auth()->user()->unreadNotifications->count() > 0)
+                <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+            @endif
+        </a>
+        <a href="/admin/notifications">
+            🔔 Notifications
+            @if(auth()->user()->unreadNotifications->count() > 0)
+                <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+            @endif
+        </a>
         <form method="POST" action="/logout">
             @csrf
             <button type="submit" class="logout-btn">🚪 Logout</button>
@@ -286,6 +309,8 @@
                     🚫 Cancelled Bookings
                 @elseif($filter == 'refund_pending')
                     💸 Pending Refunds
+                @elseif($filter == 'pending_cancellation')
+                    ⏳ Pending Cancellations
                 @else
                     📋 All Bookings
                 @endif
@@ -293,7 +318,11 @@
             <p>Click a booking card to view complete details.</p>
         </div>
 
-        <a href="/admin/management" class="back-btn">← Back to Management</a>
+        <div class="header-actions">
+            <a href="{{ route('admin.bookings.export-csv') }}" class="export-csv-btn">📊 Export CSV</a>
+            <a href="{{ route('admin.bookings.export-pdf') }}" class="export-pdf-btn">📄 Export PDF</a>
+            <a href="/admin/management" class="back-btn">← Back to Management</a>
+        </div>
     </div>
 
     <div class="booking-filters">
@@ -305,6 +334,9 @@
         <a href="/admin/bookings?filter=completed" class="filter-btn completed-filter {{ $filter == 'completed' ? 'active' : '' }}">🏁 Completed</a>
         <a href="/admin/bookings?filter=rejected" class="filter-btn rejected-filter {{ $filter == 'rejected' ? 'active' : '' }}">❌ Rejected</a>
         <a href="/admin/bookings?filter=cancelled" class="filter-btn cancelled-filter {{ $filter == 'cancelled' ? 'active' : '' }}">🚫 Cancelled</a>
+        
+        <a href="/admin/bookings?filter=pending_cancellation" class="filter-btn pendingcancellation-filter {{ $filter == 'pending_cancellation' ? 'active' : '' }}">⏳ Pending Cancellation</a>
+        
         <a href="/admin/bookings?filter=refund_pending" class="filter-btn refundpending-filter {{ $filter == 'refund_pending' ? 'active' : '' }}">💸 Refund Pending</a>
     </div>
 
@@ -372,6 +404,8 @@
                                 <span class="status rejected">Rejected</span>
                             @elseif($booking->status == 'Cancelled')
                                 <span class="status cancelled">Cancelled</span>
+                            @elseif($booking->status == 'Pending Cancellation')
+                                <span class="status pending-cancellation">Pending Cancellation</span>
                             @else
                                 <span class="status">{{ $booking->status }}</span>
                             @endif
@@ -428,6 +462,7 @@
                                 @elseif($booking->status == 'No Show') <span class="status no-show">No Show</span>
                                 @elseif($booking->status == 'Rejected') <span class="status rejected">Rejected</span>
                                 @elseif($booking->status == 'Cancelled') <span class="status cancelled">Cancelled</span>
+                                @elseif($booking->status == 'Pending Cancellation') <span class="status pending-cancellation">Pending Cancellation</span>
                                 @else <span class="status">{{ $booking->status }}</span>
                                 @endif
                             </span>
@@ -566,27 +601,26 @@
                         </div>
                     @endif
 
-                    @if($booking->status == 'Confirmed' && $booking->cancellation_status == 'Pending')
-                        <div class="cancellation-request single-column">
-                            <h3>Cancellation Request</h3>
-                            <p><strong>Status:</strong> <span class="cancellation-status">Pending Admin Review</span></p>
-                            @if($booking->cancellation_requested_at) <p><strong>Requested At:</strong> {{ $booking->cancellation_requested_at->format('M d, Y h:i A') }}</p> @endif
-                            @if($booking->cancellation_reason) <p><strong>Customer Reason:</strong> {{ $booking->cancellation_reason }}</p> @endif
-                            <div class="actions" onclick="event.stopPropagation()">
-                                <form method="POST" action="/admin/bookings/{{ $booking->id }}/approve-cancellation" onsubmit="return confirm('Approve this cancellation request? The booking will be cancelled.');">
+                    @if($booking->status == 'Pending Cancellation')
+                        @php
+                            $cancellationService = app(\App\Services\CancellationService::class);
+                            $refundData = $cancellationService->computeRefund($booking);
+                        @endphp
+                        <div class="cancellation-request single-column" style="background: #fff7ed; border-color: #fed7aa;">
+                            <h3 style="color: #c2410c;">Cancellation Request (Pending Approval)</h3>
+                            <p><strong>Policy Applied:</strong> {{ $refundData['policy'] }}</p>
+                            <p style="font-size: 16px; margin-top: 5px;"><strong>Refund Amount:</strong> <span style="color: #c2410c; font-weight: 800;">₱{{ number_format($refundData['amount'], 2) }}</span> ({{ $refundData['percentage'] }}%)</p>
+                            
+                            <div class="actions" onclick="event.stopPropagation()" style="margin-top: 15px;">
+                                <form method="POST" action="/admin/bookings/{{ $booking->id }}/approve-cancellation" onsubmit="return confirm('Approve this cancellation? The booking will be cancelled and ₱{{ number_format($refundData['amount'], 2) }} will be refunded.');">
                                     @csrf
                                     <button type="submit" class="approve-cancellation-btn">Approve Cancellation</button>
                                 </form>
-                                <form method="POST" action="/admin/bookings/{{ $booking->id }}/reject-cancellation" onsubmit="return confirm('Reject this cancellation request? The booking will remain confirmed.');">
+                                <form method="POST" action="/admin/bookings/{{ $booking->id }}/reject-cancellation" onsubmit="return confirm('Reject this cancellation? The booking will remain confirmed.');">
                                     @csrf
                                     <button type="submit" class="reject-cancellation-btn">Reject Cancellation</button>
                                 </form>
                             </div>
-                        </div>
-                    @elseif($booking->status == 'Confirmed' && $booking->cancellation_status == 'Rejected')
-                        <div class="cancellation-rejected single-column">
-                            <strong>Cancellation Request Rejected</strong>
-                            <p>The customer requested cancellation previously, but the request was rejected.</p>
                         </div>
                     @endif
 
@@ -786,6 +820,8 @@
             return;
         }
 
+        const userId = {{ auth()->id() }};
+
         // 1. Bagong Booking
         window.Echo.channel('admin.bookings')
             .listen('BookingCreated', (e) => {
@@ -803,19 +839,33 @@
                 setTimeout(() => window.location.reload(), 3000); 
             });
 
-        // 2. Cancellation Request
-        window.Echo.private(`App.Models.User.{{ auth()->id() }}`)
+        // 2. Cancellation & Refund Notifications
+        window.Echo.private(`App.Models.User.${userId}`)
             .notification((notification) => {
                 console.log('New Notification:', notification);
+
                 if (notification.type === 'cancellation_requested') {
                     if (window.showToast) {
                         window.showToast(
                             'Cancellation Request!', 
-                            `${notification.guest_name} requested cancellation.`, 
+                            notification.message, 
                             'warning',
-                            `/admin/bookings?booking_id=${notification.booking_id}`
+                            notification.url
                         );
                     }
+                    setTimeout(() => window.location.reload(), 3000);
+                }
+
+                if (notification.type === 'refund_requested') {
+                    if (window.showToast) {
+                        window.showToast(
+                            'Refund Request!', 
+                            notification.message, 
+                            'warning',
+                            notification.url
+                        );
+                    }
+                    setTimeout(() => window.location.reload(), 3000);
                 }
             });
     });

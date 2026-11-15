@@ -106,6 +106,52 @@ class AdminDashboardController extends Controller
 
         $unreadNotificationsCount = auth()->user()->unreadNotifications()->count();
 
+        // === CHART DATA ===
+        $chartMonths = [];
+        $chartBookedRevenue = [];
+        $chartRealizedRevenue = [];
+        $chartOccupancy = [];
+
+        $selectedYear = now()->year;
+        $allRoomsCount = Accommodation::where('type', 'Room')->count();
+
+        for ($i = 1; $i <= 12; $i++) {
+            $chartMonths[] = date('M', mktime(0, 0, 0, $i, 1));
+
+            $bookedRevenueThisMonth = Booking::whereIn('status', ['Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Completed'])
+                ->whereYear('check_in', $selectedYear)
+                ->whereMonth('check_in', $i)
+                ->get()
+                ->sum(fn ($b) => $b->net_total);
+
+            $chartBookedRevenue[] = (float) $bookedRevenueThisMonth;
+
+            $realizedRevenueThisMonth = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])
+                ->whereYear('check_in', $selectedYear)
+                ->whereMonth('check_in', $i)
+                ->get()
+                ->sum(fn ($b) => $b->net_total);
+
+            $chartRealizedRevenue[] = (float) $realizedRevenueThisMonth;
+
+            $occupiedRoomsThisMonth = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])
+                ->whereYear('check_in', $selectedYear)
+                ->whereMonth('check_in', $i)
+                ->pluck('accommodations')
+                ->flatMap(function ($accommodations) {
+                    return collect(explode(',', $accommodations ?? ''))
+                        ->map(fn ($name) => trim($name))
+                        ->filter(fn ($name) => str_starts_with($name, 'Room '));
+                })
+                ->unique()
+                ->count();
+
+            $chartOccupancy[] = $allRoomsCount > 0
+                ? round(($occupiedRoomsThisMonth / $allRoomsCount) * 100, 2)
+                : 0;
+        }
+        // ====================
+
         \App\Events\DashboardStatsUpdated::dispatch();
 
         return view('admin.dashboard', compact(
@@ -127,15 +173,18 @@ class AdminDashboardController extends Controller
             'unreadNotificationsCount',
             'pendingRefundsCount',
             'pendingCancellationsCount',
-            'pendingShiftRequestsCount'
+            'pendingShiftRequestsCount',
+            'chartMonths',
+            'chartBookedRevenue',
+            'chartRealizedRevenue',
+            'chartOccupancy'
         ));
     }
 
     public function analytics(Request $request)
     {
-        // Kunin ang year mula sa URL, default sa kasalukuyang taon
         $selectedYear = (int) $request->query('year', date('Y'));
-        $search = trim($request->query('search', '')); // <-- IDINAGDAG PARA SA SEARCH
+        $search = trim($request->query('search', ''));
 
         $pendingBookings   = Booking::where('status', 'Pending')->count();
         $confirmedBookings = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])->count();
@@ -165,7 +214,6 @@ class AdminDashboardController extends Controller
                 ->whereMonth('check_in', $i)
                 ->count();
 
-            // === FIXED: Gamit na ang net_total accessor (bawas discount) ===
             $bookedRevenueThisMonth = Booking::whereIn('status', ['Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Completed'])
                 ->whereYear('check_in', $selectedYear)
                 ->whereMonth('check_in', $i)
@@ -181,9 +229,7 @@ class AdminDashboardController extends Controller
                 ->sum(fn ($b) => $b->net_total);
 
             $chartRealizedRevenue[] = (float) $realizedRevenueThisMonth;
-            // =================================================================
 
-            // === FIXED: Occupancy = rooms booked / total rooms ===
             $occupiedRoomsThisMonth = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Checked Out', 'Completed'])
                 ->whereYear('check_in', $selectedYear)
                 ->whereMonth('check_in', $i)
@@ -199,7 +245,6 @@ class AdminDashboardController extends Controller
             $chartOccupancy[] = $allRoomsCount > 0
                 ? round(($occupiedRoomsThisMonth / $allRoomsCount) * 100, 2)
                 : 0;
-            // ========================================================
         }
 
         $paymentMethodData = [
@@ -212,7 +257,6 @@ class AdminDashboardController extends Controller
             ->where('status', 'Active')
             ->orderBy('name');
 
-        // I-filter ang employees base sa search
         if ($search !== '') {
             $employeesQuery->where('name', 'like', "%{$search}%");
         }
@@ -243,7 +287,6 @@ class AdminDashboardController extends Controller
                     return \Carbon\Carbon::parse($r->time_in)->diffInMinutes(\Carbon\Carbon::parse($r->time_out));
                 });
 
-            // Accumulate totals for the top cards
             $totalLateMinutes += $lateMins;
             $totalOvertimeMinutes += $otMins;
             $totalUndertimeMinutes += $utMins;
@@ -261,15 +304,12 @@ class AdminDashboardController extends Controller
             ];
         }
 
-        // I-sort natin kung sino ang pinakamaraming late (descending)
         usort($employeeStats, fn($a, $b) => $b['late_minutes'] <=> $a['late_minutes']);
 
         $totalWorkedHours = round($totalWorkedMinutes / 60, 2);
-        // =================================
 
         $unreadNotificationsCount = auth()->user()->unreadNotifications()->count();
 
-        // === KUNG AJAX REQUEST, IBALIK LANG ANG TABLE PART ===
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'html' => view('admin.analytics._table', compact('employeeStats'))->render()
@@ -291,7 +331,7 @@ class AdminDashboardController extends Controller
             'totalUndertimeMinutes',
             'totalWorkedHours',
             'employeeStats',
-            'search' // <-- Idinagdag para ma-maintain ang value sa search bar
+            'search'
         ));
     }
 
@@ -439,5 +479,11 @@ class AdminDashboardController extends Controller
         }
 
         return redirect('/admin/notifications');
+    }
+
+    public function markAllAsRead()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back()->with('success', 'All notifications marked as read.');
     }
 }

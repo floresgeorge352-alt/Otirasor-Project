@@ -70,11 +70,9 @@
         .review-btn { background: #fbbf24; color: #78350f; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.25); }
         .review-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(251, 191, 36, 0.35); }
         
-        /* Rewards Button */
         .rewards-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25); }
         .rewards-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35); }
         
-        /* Refund Button */
         .refund-btn { background: #ef4444; color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25); }
         .refund-btn:hover { background: #dc2626; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35); }
 
@@ -103,12 +101,10 @@
         .cancellation-rejected { margin-top: 20px; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 10px; font-weight: 600; font-size: 14px; }
         .review-display { margin-top: 15px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; }
 
-        /* Rewards Applied Box */
         .rewards-applied-box { margin-top: 15px; padding: 15px; background: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 10px; }
         .rewards-applied-box h4 { color: #6b21a8; font-size: 14px; margin-bottom: 5px; }
         .rewards-applied-box p { font-size: 13px; color: #7e22ce; margin: 3px 0; }
 
-        /* Refund Status Badges */
         .refund-status-pending { margin-top: 15px; padding: 15px; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 10px; font-weight: 600; font-size: 14px; }
         .refund-status-approved { margin-top: 15px; padding: 15px; background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; border-radius: 10px; font-weight: 600; font-size: 14px; }
         .refund-status-rejected { margin-top: 15px; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 10px; font-weight: 600; font-size: 14px; }
@@ -125,7 +121,6 @@
         .pagination-link.active { background: #0077b6; color: white; border-color: #0077b6; }
         .pagination-link.disabled { color: #adb5bd; background: #f8f9fa; cursor: not-allowed; border-color: #e9ecef; }
 
-        /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; border-radius: 16px; width: 90%; max-width: 500px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; animation: slideDown 0.3s ease; }
@@ -205,6 +200,8 @@
                         <span class="status rejected" id="status-{{ $booking->id }}">Rejected</span>
                     @elseif($booking->status === 'Cancelled')
                         <span class="status cancelled" id="status-{{ $booking->id }}">Cancelled</span>
+                    @elseif($booking->status === 'Pending Cancellation')
+                        <span class="status pending" id="status-{{ $booking->id }}">Pending Cancellation</span>
                     @endif
                 </div>
 
@@ -335,39 +332,30 @@
                             <a href="/my-bookings/{{ $booking->id }}/receipt" class="receipt-btn">View E-Receipt</a>
                             <a href="/my-bookings/{{ $booking->id }}/invoice" class="invoice-btn">Download Invoice</a>
 
-                            @if($booking->cancellation_status === 'Pending')
-                                <div class="cancellation-pending" style="margin:0; width:100%;">
-                                    Cancellation Request Pending. Waiting for admin approval.
-                                </div>
-                            @elseif($booking->cancellation_status === 'Rejected')
-                                <div class="cancellation-rejected" style="margin:0; width:100%;">
-                                    Cancellation request was rejected. Your booking remains confirmed.
-                                </div>
-                                
-                                <details style="margin-top: 15px; width:100%;">
-                                    <summary class="request-btn" style="display:inline-block; list-style:none;">Request Cancellation Again</summary>
-                                    <form method="POST" action="/my-bookings/{{ $booking->id }}/request-cancellation" class="cancel-form">
-                                        @csrf
-                                        <label>Reason for Cancellation</label>
-                                        <textarea name="cancellation_reason" placeholder="Please enter your reason..." required></textarea>
-                                        <button type="submit" class="submit-request">Submit Cancellation Request</button>
-                                    </form>
-                                </details>
-                            @else
-                                <details style="margin-top: 0; width:100%;">
-                                    <summary class="request-btn" style="display:inline-block; list-style:none;">Request Cancellation</summary>
-                                    <form method="POST" action="/my-bookings/{{ $booking->id }}/request-cancellation" class="cancel-form">
-                                        @csrf
-                                        <label>Reason for Cancellation</label>
-                                        <textarea name="cancellation_reason" placeholder="Please enter your reason..." required></textarea>
-                                        <button type="submit" class="submit-request">Submit Cancellation Request</button>
-                                    </form>
-                                </details>
-                            @endif
+                            {{-- CANCELLATION POLICY WARNING --}}
+                            <div style="background: #fff8e8; border: 1px solid #f0ad4e; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 13px; color: #856404; width: 100%;">
+                                <strong>⚠️ Cancellation Policy:</strong><br>
+                                • <strong>7+ days</strong> before check-in: 100% Refund<br>
+                                • <strong>3-6 days</strong> before check-in: 50% Refund<br>
+                                • <strong>Less than 3 days</strong>: No Refund
+                            </div>
+
+                            {{-- REQUEST CANCELLATION FORM --}}
+                            <details style="margin-top: 10px; width: 100%;">
+                                <summary style="background: #c62828; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; font-family: 'Montserrat', sans-serif; text-align: center; cursor: pointer; list-style: none; display: block;">
+                                    ⚠️ Request Cancellation
+                                </summary>
+                                <form method="POST" action="/my-bookings/{{ $booking->id }}/request-cancellation" class="cancel-form" style="margin-top: 10px;">
+                                    @csrf
+                                    <label>Reason for Cancellation</label>
+                                    <textarea name="cancellation_reason" placeholder="Please explain why you want to cancel..." required></textarea>
+                                    <button type="submit" class="submit-request">Submit Cancellation Request</button>
+                                </form>
+                            </details>
                         @endif
 
                         <!-- REFUND BUTTON LOGIC (Para sa GCash Payments lang) -->
-                        @if($booking->payment_method === 'GCash' && $booking->payment_status === 'Verified' && in_array($booking->status, ['Confirmed', 'Checked Out', 'Cancelled']) && $booking->refund_status !== 'Pending' && $booking->refund_status !== 'Refunded')
+                        @if($booking->payment_method === 'GCash' && $booking->payment_status === 'Verified' && in_array($booking->status, ['Confirmed', 'Checked Out', 'Cancelled', 'Pending Cancellation']) && $booking->refund_status !== 'Pending' && $booking->refund_status !== 'Refunded')
                             <button type="button" class="refund-btn" onclick="openRefundModal({{ $booking->id }})">
                                 💸 Request Refund
                             </button>

@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Booking;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -17,7 +18,7 @@ class RefundRequestedNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', 'mail', 'broadcast'];
     }
 
     public function toMail($notifiable): MailMessage
@@ -38,8 +39,20 @@ class RefundRequestedNotification extends Notification
         return [
             'booking_id' => $this->booking->id,
             'guest_name' => $this->booking->guest_name,
-            'type' => 'refund_requested',
-            'message' => 'New refund request for Booking #' . $this->booking->id . '.',
+            'type'       => 'refund_requested',
+            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a refund for Booking #' . $this->booking->id . '.',
+            'url'        => '/admin/bookings?filter=refund_pending',
         ];
+    }
+
+    public function toBroadcast($notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'booking_id' => $this->booking->id,
+            'guest_name' => $this->booking->guest_name,
+            'type'       => 'refund_requested',
+            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a refund.',
+            'url'        => '/admin/bookings?filter=refund_pending',
+        ]);
     }
 }

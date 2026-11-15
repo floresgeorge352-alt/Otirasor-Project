@@ -40,38 +40,39 @@ class CustomerBookingController extends Controller
     }
 
     // =========================================================
-    // CANCELLATION
+    // CANCELLATION REQUEST (HINDI DIRECT CANCEL)
     // =========================================================
-
-    public function cancel(Booking $booking)
+    
+    public function requestCancellation(Request $request, Booking $booking)
     {
         if ($booking->user_id !== Auth::id()) {
             abort(403, 'Unauthorized access.');
         }
 
-        if (!in_array($booking->status, ['Pending', 'Confirmed'])) {
-            return back()->with('error', 'This booking can no longer be cancelled.');
+        if ($booking->status !== 'Confirmed') {
+            return back()->with('error', 'Only confirmed bookings can request cancellation.');
         }
 
-        $booking->update(['status' => 'Cancelled']);
-
-        // Ibabalik ang points kung may ginamit
-        if ($booking->reward_points_used > 0 && $booking->user) {
-            $booking->user->increment('reward_points', $booking->reward_points_used);
-            RewardPoint::create([
-                'user_id' => $booking->user->id,
-                'booking_id' => $booking->id,
-                'points' => $booking->reward_points_used,
-                'type' => 'refunded_booking_cancelled',
-                'description' => 'Returned points from cancelled Booking #' . $booking->id,
-            ]);
+        if ($booking->cancellation_status === 'Pending') {
+            return back()->with('error', 'A cancellation request is already pending.');
         }
+
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:500',
+        ]);
+
+        $booking->update([
+            'status' => 'Pending Cancellation',
+            'cancellation_status' => 'Pending',
+            'cancellation_reason' => $request->cancellation_reason,
+            'cancellation_requested_at' => now(),
+        ]);
 
         User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
             $admin->notify(new BookingCancelledNotification($booking));
         });
 
-        return back()->with('success', 'Booking cancelled successfully.');
+        return back()->with('success', 'Cancellation request submitted. Please wait for admin approval.');
     }
 
     // =========================================================
@@ -80,17 +81,15 @@ class CustomerBookingController extends Controller
 
     public function requestRefund(Request $request, Booking $booking)
     {
-        // 1. Check kung sa user nga ito
         if ($booking->user_id !== Auth::id()) {
             abort(403, 'Unauthorized access.');
         }
 
-        // 2. Check kung pwedeng i-refund (Dapat Confirmed, Checked Out, o Cancelled)
-        if (!in_array($booking->status, ['Confirmed', 'Checked Out', 'Cancelled'])) {
+        // Papayagan ang Refund kahit Pending Cancellation
+        if (!in_array($booking->status, ['Confirmed', 'Checked Out', 'Cancelled', 'Pending Cancellation'])) {
             return back()->with('error', 'This booking is not eligible for a refund.');
         }
 
-        // 3. Check kung may pending request na
         if ($booking->refund_status === 'Pending') {
             return back()->with('error', 'You already have a pending refund request.');
         }
@@ -99,13 +98,11 @@ class CustomerBookingController extends Controller
             'refund_request_reason' => 'required|string|max:500',
         ]);
 
-        // 4. I-update ang booking
         $booking->update([
             'refund_status' => 'Pending',
             'refund_request_reason' => $request->refund_request_reason,
         ]);
 
-        // 5. Notify Admin (Gamit na ang tamang notification class)
         User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
             $admin->notify(new RefundRequestedNotification($booking));
         });

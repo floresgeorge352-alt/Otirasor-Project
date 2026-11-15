@@ -66,6 +66,28 @@ Route::post('/reservation-holds', [ReservationHoldController::class, 'store'])
 Route::delete('/reservation-holds/{hold}', [ReservationHoldController::class, 'release'])
     ->name('reservation-holds.release');
 
+// === BAGONG ROUTE PARA SA ACTIVE HOLD ===
+Route::get('/api/active-hold', function () {
+    $hold = \App\Models\ReservationHold::active()
+        ->where('session_id', session()->getId())
+        ->latest()
+        ->first();
+
+    if ($hold) {
+        return response()->json([
+            'active' => true,
+            'hold' => [
+                'id' => $hold->id,
+                'expires_at' => $hold->expires_at->toIso8601String(),
+                'accommodation_ids' => $hold->accommodation_ids,
+            ]
+        ]);
+    }
+
+    return response()->json(['active' => false]);
+})->name('api.active-hold');
+// =========================================
+
 /*
 |--------------------------------------------------------------------------
 | Customer Routes
@@ -102,10 +124,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-rewards', [\App\Http\Controllers\RewardController::class, 'index'])->name('customer.rewards.index');
     Route::post('/my-bookings/{booking}/apply-rewards', [\App\Http\Controllers\RewardController::class, 'apply'])->name('customer.rewards.apply');
 
+    // === CANCELLATION REQUEST ===
     Route::post(
-        '/my-bookings/{booking}/cancel',
-        [CustomerBookingController::class, 'cancel']
-    );
+        '/my-bookings/{booking}/request-cancellation',
+        [CustomerBookingController::class, 'requestCancellation']
+    )->name('customer.bookings.request-cancellation');
+    // =============================
 
     Route::get(
         '/my-bookings/{booking}/receipt',
@@ -115,11 +139,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get(
         '/my-bookings/{booking}/invoice',
         [BookingController::class, 'invoice']
-    );
-
-    Route::post(
-        '/my-bookings/{booking}/request-cancellation',
-        [BookingController::class, 'requestCancellation']
     );
 
     Route::post(
@@ -150,16 +169,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 */
 
 Route::get('/dashboard', function () {
-    // Kapag Admin, i-redirect sa Admin Dashboard
     if (auth()->check() && auth()->user()->role === 'admin') {
         return redirect('/admin/dashboard');
     }
-    // Kapag Employee, i-redirect sa Employee Dashboard
     if (auth()->check() && auth()->user()->role === 'employee') {
         return redirect('/employee/dashboard');
     }
     
-    // IDINAGDAG: Tumuturo sa Customer Dashboard file
     return view('customer.dashboard'); 
 })
     ->middleware(['auth', 'verified'])
@@ -253,15 +269,26 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         [AdminDashboardController::class, 'openNotification']
     );
 
+    // === MARK ALL AS READ ===
+    Route::post('/admin/notifications/mark-all-read', [AdminDashboardController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
+    // ==================================
+
     Route::get(
         '/admin/reports',
         [AdminReportController::class, 'index']
     );
 
+    // === PROMOTIONS ===
     Route::get('/admin/promotions', [AdminPromotionController::class, 'index']);
     Route::post('/admin/promotions', [AdminPromotionController::class, 'store']);
     Route::post('/admin/promotions/{promotion}/toggle', [AdminPromotionController::class, 'toggle']);
     Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy']);
+
+    // === PROMOTIONS TRASH ===
+    Route::get('/admin/promotions-trash', [AdminPromotionController::class, 'trash'])->name('admin.promotions.trash');
+    Route::post('/admin/promotions/{id}/restore', [AdminPromotionController::class, 'restore'])->name('admin.promotions.restore');
+    Route::delete('/admin/promotions/{id}/force-delete', [AdminPromotionController::class, 'forceDelete'])->name('admin.promotions.force-delete');
+    // ========================
 
     Route::get('/admin/transactions', [\App\Http\Controllers\AdminTransactionController::class, 'index'])->name('admin.transactions');
     Route::get('/admin/transactions/export', [\App\Http\Controllers\AdminTransactionController::class, 'exportCsv'])->name('admin.transactions.export');
@@ -298,15 +325,25 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         [AdminGalleryController::class, 'destroy']
     )->name('admin.gallery.destroy');
 
+    // === ACCOMMODATIONS + SOFT DELETE ===
     Route::resource(
         '/admin/accommodations',
         AdminAccommodationController::class
     );
 
+    Route::get('/admin/accommodations-trash', [AdminAccommodationController::class, 'trash'])->name('admin.accommodations.trash');
+    Route::post('/admin/accommodations/{id}/restore', [AdminAccommodationController::class, 'restore'])->name('admin.accommodations.restore');
+    Route::delete('/admin/accommodations/{id}/force-delete', [AdminAccommodationController::class, 'forceDelete'])->name('admin.accommodations.force-delete');
+    // =====================================
+
+    // === BOOKINGS ===
     Route::get(
         '/admin/bookings',
         [AdminBookingController::class, 'index']
     );
+
+    Route::get('/admin/bookings/export-csv', [AdminBookingController::class, 'exportCsv'])->name('admin.bookings.export-csv');
+    Route::get('/admin/bookings/export-pdf', [AdminBookingController::class, 'exportPdf'])->name('admin.bookings.export-pdf');
 
     Route::match(
         ['GET', 'POST'],
@@ -569,8 +606,6 @@ Route::get('/two-factor-challenge', function () {
 })->middleware('guest')->name('two-factor.login');
 
 Route::post('/two-factor-challenge', function (\Illuminate\Http\Request $request) {
-    $request->validate(['code' => 'required']);
-    
     $userId = $request->session()->get('login.id');
     $user = \App\Models\User::find($userId);
 
@@ -578,7 +613,32 @@ Route::post('/two-factor-challenge', function (\Illuminate\Http\Request $request
         return redirect('/login');
     }
 
-    // GAMITIN ANG CLASS NANG DIRETSO IMBES NA STRING
+    // 1. KUNG MAY RECOVERY CODE
+    if ($request->filled('recovery_code')) {
+        $request->validate(['recovery_code' => 'required']);
+        
+        $recoveryCode = $request->input('recovery_code');
+        
+        if (in_array($recoveryCode, $user->recoveryCodes())) {
+            $user->replaceRecoveryCode($recoveryCode);
+            
+            auth()->login($user);
+            $request->session()->forget('login.id');
+            
+            if ($user->role === 'admin') {
+                return redirect('/admin/dashboard');
+            } elseif ($user->role === 'employee') {
+                return redirect('/employee/dashboard');
+            }
+            return redirect('/dashboard');
+        }
+        
+        return back()->withErrors(['recovery_code' => 'Invalid recovery code.']);
+    }
+
+    // 2. KUNG AUTHENTICATOR CODE ANG GINAMIT
+    $request->validate(['code' => 'required']);
+    
     $google2fa = new \PragmaRX\Google2FA\Google2FA();
     $secret = decrypt($user->two_factor_secret);
     
