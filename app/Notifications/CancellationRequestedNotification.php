@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class RefundRequestedNotification extends Notification
+class CancellationRequestedNotification extends Notification
 {
     use Queueable;
 
@@ -21,22 +21,22 @@ class RefundRequestedNotification extends Notification
     public function toArray($notifiable): array
     {
         return [
-            'type'       => 'refund_requested',
+            'type'       => 'cancellation_requested',
             'booking_id' => $this->booking->id,
             'guest_name' => $this->booking->guest_name,
-            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a refund for Booking #' . $this->booking->id . '.',
-            'url'        => '/admin/bookings?filter=refund_pending',
+            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a cancellation for Booking #' . $this->booking->id . '.',
+            'url'        => '/admin/bookings?filter=pending_cancellation',
         ];
     }
 
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'type'       => 'refund_requested',
+            'type'       => 'cancellation_requested',
             'booking_id' => $this->booking->id,
             'guest_name' => $this->booking->guest_name,
-            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a refund.',
-            'url'        => '/admin/bookings?filter=refund_pending',
+            'message'    => 'Customer ' . $this->booking->guest_name . ' requested a cancellation.',
+            'url'        => '/admin/bookings?filter=pending_cancellation',
         ]);
     }
 }

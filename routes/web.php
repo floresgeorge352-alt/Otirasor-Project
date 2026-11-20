@@ -156,6 +156,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [CustomerBookingController::class, 'notifications']
     )->name('customer.notifications');
 
+    // === MARK ALL AS READ ===
+    Route::post('/notifications/mark-all-read', [CustomerBookingController::class, 'markAllAsRead'])->name('customer.notifications.mark-all-read');
+    // =======================
+
     Route::get(
         '/notifications/{notification}/open',
         [CustomerBookingController::class, 'openNotification']

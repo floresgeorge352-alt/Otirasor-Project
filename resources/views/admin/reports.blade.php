@@ -235,9 +235,10 @@
             padding: 20px;
         }
 
+        /* INAYOS: Binago sa 1 column para hindi magkaroon ng space na walang laman */
         .payment-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 15px;
         }
 
@@ -594,14 +595,7 @@
         <div class="section-body">
             <div class="payment-grid">
 
-                <a href="{{ url('/admin/reports') }}?payment_method=Cash" class="payment-box">
-                    <div class="payment-icon">💵</div>
-                    <div class="payment-content">
-                        <h3>Cash</h3>
-                        <div class="payment-number">{{ $cashBookings }}</div>
-                        <p>Bookings — click to view</p>
-                    </div>
-                </a>
+                <!-- CASH BOX REMOVED -->
 
                 <a href="{{ url('/admin/reports') }}?payment_method=GCash" class="payment-box">
                     <div class="payment-icon">📱</div>

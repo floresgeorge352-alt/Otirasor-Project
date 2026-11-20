@@ -22,7 +22,7 @@ class AdminRoomController extends Controller
         $needsCleaningRooms = [];
 
         // CURRENTLY OCCUPIED ROOMS
-        $activeBookingsQuery = Booking::whereIn('status', ['Confirmed', 'Checked In'])
+        $activeBookingsQuery = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Pending Cancellation'])
             ->where('check_in', '<=', $today)
             ->where('check_out', '>', $today);
 
@@ -52,7 +52,7 @@ class AdminRoomController extends Controller
         }
 
         // FUTURE RESERVED ROOMS
-        $futureBookingsQuery = Booking::whereIn('status', ['Pending', 'Confirmed'])
+        $futureBookingsQuery = Booking::whereIn('status', ['Pending', 'Confirmed', 'Pending Cancellation'])
             ->where('check_in', '>', $today)
             ->orderBy('check_in');
 

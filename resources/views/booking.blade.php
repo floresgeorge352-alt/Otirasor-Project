@@ -102,7 +102,7 @@
         .grand-total-preview strong { color: #2e7d32; font-size: 32px; font-weight: 900; white-space: nowrap; }
         .payment-section { grid-column: 1 / -1; margin-top: 5px; }
         .payment-title { color: var(--dark); font-size: 16px; font-weight: 700; margin-bottom: 12px; font-family: 'Montserrat', sans-serif; }
-        .gcash-box { display: none; margin-top: 20px; padding: 25px; border-radius: 16px; background: linear-gradient(135deg, #effaff, #f9fdff); border: 1px solid #bfe5ee; }
+        .gcash-box { display: block; margin-top: 20px; padding: 25px; border-radius: 16px; background: linear-gradient(135deg, #effaff, #f9fdff); border: 1px solid #bfe5ee; }
         .gcash-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
         .gcash-icon { width: 48px; height: 48px; border-radius: 12px; background: #0077b6; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; }
         .gcash-header h3 { color: var(--dark); font-size: 19px; margin: 0; }
@@ -349,13 +349,11 @@
 
                 <div class="payment-section">
                     <div class="payment-title">💳 Payment Method</div>
-                    <select name="payment_method" id="payment_method" required>
-                        <option value="">Select payment method</option>
-                        <option value="Cash" {{ old('payment_method') == 'Cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="GCash" {{ old('payment_method') == 'GCash' ? 'selected' : '' }}>GCash</option>
-                    </select>
+                    
+                    {{-- GCASH ONLY HIDDEN INPUT --}}
+                    <input type="hidden" name="payment_method" id="payment_method" value="GCash">
 
-                    <div id="gcash-payment" class="gcash-box">
+                    <div class="gcash-box" style="display: block;">
                         <div class="gcash-header">
                             <div class="gcash-icon">₱</div>
                             <div><h3>GCash Payment</h3><p>Send your payment using the account below.</p></div>
@@ -366,11 +364,11 @@
                         </div>
                         <div class="form-group">
                             <label for="gcash_reference">GCash Reference Number <span class="required">*</span></label>
-                            <input type="text" id="gcash_reference" name="gcash_reference" value="{{ old('gcash_reference') }}" placeholder="Enter 13-digit reference number" maxlength="13" minlength="13" pattern="[0-9]{13}" inputmode="numeric">
+                            <input type="text" id="gcash_reference" name="gcash_reference" value="{{ old('gcash_reference') }}" placeholder="Enter 13-digit reference number" maxlength="13" minlength="13" pattern="[0-9]{13}" inputmode="numeric" required>
                         </div>
                         <div class="proof-box">
                             <label for="gcash_proof">GCash Payment Proof <span class="required">*</span></label>
-                            <input type="file" id="gcash_proof" name="gcash_proof" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                            <input type="file" id="gcash_proof" name="gcash_proof" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required>
                             <div class="upload-help">Upload a screenshot or photo. Max: 5 MB.</div>
                         </div>
                     </div>
@@ -433,9 +431,6 @@
     const poolControls  = document.getElementById('pool-controls');
     const poolAdultsSel = document.getElementById('pool_adults');
     const poolKidsSel   = document.getElementById('pool_kids');
-
-    const paymentMethod = document.getElementById('payment_method');
-    const gcashBox      = document.getElementById('gcash-payment');
 
     // ===== PROMO ELEMENTS =====
     const promoInput   = document.getElementById('promo_code');
@@ -552,27 +547,6 @@
             }
             recalc();
         });
-    }
-
-    if (paymentMethod && gcashBox) {
-        function toggleGcash() {
-            const isGcash = paymentMethod.value === 'GCash';
-            gcashBox.style.display = isGcash ? 'block' : 'none';
-
-            const gcashRef   = document.getElementById('gcash_reference');
-            const gcashProof = document.getElementById('gcash_proof');
-
-            if (gcashRef) {
-                gcashRef.required = isGcash;
-                if (!isGcash) gcashRef.value = '';
-            }
-            if (gcashProof) {
-                gcashProof.required = isGcash;
-                if (!isGcash) gcashProof.value = '';
-            }
-        }
-        paymentMethod.addEventListener('change', toggleGcash);
-        toggleGcash();
     }
 
     if (useRewardsCheckbox) {

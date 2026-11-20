@@ -39,7 +39,7 @@ class AdminDashboardController extends Controller
         $totalRooms = count($allRooms);
 
         $occupiedRoomDetails = [];
-        $activeRoomBookings = Booking::whereIn('status', ['Confirmed', 'Checked In'])
+        $activeRoomBookings = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Pending Cancellation'])
             ->where('check_in', '<=', $today)
             ->where('check_out', '>', $today)
             ->latest()
@@ -62,7 +62,7 @@ class AdminDashboardController extends Controller
         }
 
         $reservedRoomDetails = [];
-        $futureRoomBookings = Booking::whereIn('status', ['Pending', 'Confirmed'])
+        $futureRoomBookings = Booking::whereIn('status', ['Pending', 'Confirmed', 'Pending Cancellation'])
             ->where('check_in', '>', $today)
             ->orderBy('check_in')
             ->get();
@@ -247,8 +247,8 @@ class AdminDashboardController extends Controller
                 : 0;
         }
 
+        // === CASH REMOVED HERE ===
         $paymentMethodData = [
-            'Cash'  => Booking::where('payment_method', 'Cash')->count(),
             'GCash' => Booking::where('payment_method', 'GCash')->count(),
         ];
 
@@ -397,7 +397,7 @@ class AdminDashboardController extends Controller
         $today = Carbon::today();
 
         $occupiedRoomDetails = [];
-        $activeRoomBookings = Booking::whereIn('status', ['Confirmed', 'Checked In'])
+        $activeRoomBookings = Booking::whereIn('status', ['Confirmed', 'Checked In', 'Pending Cancellation'])
             ->where('check_in', '<=', $today)
             ->where('check_out', '>', $today)
             ->orderBy('check_in')
@@ -419,7 +419,7 @@ class AdminDashboardController extends Controller
         }
 
         $reservedRoomDetails = [];
-        $futureRoomBookings = Booking::whereIn('status', ['Pending', 'Confirmed'])
+        $futureRoomBookings = Booking::whereIn('status', ['Pending', 'Confirmed', 'Pending Cancellation'])
             ->where('check_in', '>', $today)
             ->orderBy('check_in')
             ->get();

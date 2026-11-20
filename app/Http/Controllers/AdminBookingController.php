@@ -435,14 +435,17 @@ class AdminBookingController extends Controller
         }
 
         DB::transaction(function () use ($booking) {
-            $booking->update(['cancellation_status' => 'Rejected']);
+            $booking->update([
+                'status' => 'Confirmed',
+                'cancellation_status' => 'Rejected',
+            ]);
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'action' => 'reject_cancellation',
                 'model_type' => Booking::class,
                 'model_id' => $booking->id,
-                'new_values' => ['cancellation_status' => 'Rejected'],
+                'new_values' => ['cancellation_status' => 'Rejected', 'status' => 'Confirmed'],
                 'ip_address' => request()->ip(),
             ]);
 
@@ -451,6 +454,7 @@ class AdminBookingController extends Controller
             }
 
             \App\Events\BookingStatusUpdated::dispatch($booking);
+            \App\Events\RoomStatusUpdated::dispatch($booking);
         });
 
         return back()->with('success', 'Cancellation request rejected. The booking remains confirmed.');

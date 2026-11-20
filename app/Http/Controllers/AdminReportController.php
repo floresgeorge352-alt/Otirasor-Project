@@ -19,7 +19,7 @@ class AdminReportController extends Controller
         $totalGuests = Booking::whereIn('status', ['Pending', 'Confirmed'])
             ->sum('number_of_guests');
 
-        $cashBookings  = Booking::where('payment_method', 'Cash')->count();
+        // CASH REMOVED
         $gcashBookings = Booking::where('payment_method', 'GCash')->count();
 
         $recentBookings = Booking::latest()->take(10)->get();
@@ -30,12 +30,13 @@ class AdminReportController extends Controller
         $detailBookings = collect();
         $detailTitle    = null;
 
-        if (in_array($paymentMethod, ['Cash', 'GCash'], true)) {
-            $detailBookings = Booking::where('payment_method', $paymentMethod)
+        // CASH REMOVED
+        if ($paymentMethod === 'GCash') {
+            $detailBookings = Booking::where('payment_method', 'GCash')
                 ->latest()
                 ->get();
 
-            $detailTitle = $paymentMethod . ' Payment Bookings';
+            $detailTitle = 'GCash Payment Bookings';
         } elseif ($details === 'guests') {
             $detailBookings = Booking::whereIn('status', ['Pending', 'Confirmed'])
                 ->latest()
@@ -54,8 +55,7 @@ class AdminReportController extends Controller
             'cancelledBookings',
             'rejectedBookings',
             'totalGuests',
-            'cashBookings',
-            'gcashBookings',
+            'gcashBookings', // cashBookings removed
             'recentBookings',
             'detailBookings',
             'detailTitle'

@@ -128,4 +128,34 @@ class Booking extends Model
 
         return $subtotal - $discount - $rewardDiscount;
     }
+
+    // =========================================================
+    // ✅ BAGONG ACCESSOR — Accommodations (for legacy support)
+    // =========================================================
+    /**
+     * Fallback accessor para sa 'accommodations' attribute.
+     * Kung may laman ang pivot table (many-to-many), doon kukuha.
+     * Kung wala, ibabalik ang lumang comma-separated string.
+     */
+    public function getAccommodationsAttribute($value)
+    {
+        // 1. Check if relationship is already loaded
+        if ($this->relationLoaded('accommodations')) {
+            $names = $this->relations['accommodations']->pluck('name')->toArray();
+            if (!empty($names)) {
+                return implode(', ', $names);
+            }
+        }
+
+        // 2. Check if may laman ang pivot table (DB query)
+        if ($this->accommodations()->exists()) {
+            $names = $this->accommodations()->pluck('name')->toArray();
+            if (!empty($names)) {
+                return implode(', ', $names);
+            }
+        }
+
+        // 3. Fallback sa lumang string column
+        return $value;
+    }
 }

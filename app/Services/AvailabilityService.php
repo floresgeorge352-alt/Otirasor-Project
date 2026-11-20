@@ -23,13 +23,26 @@ class AvailabilityService
         ReservationHold::expireStale();
 
         $booked = Booking::query()
-            ->whereIn('status', ['Pending', 'Confirmed'])
+            ->whereIn('status', ['Pending', 'Confirmed', 'Checked In', 'Pending Cancellation'])
             ->when($excludeBookingId, fn ($q) => $q->where('id', '!=', $excludeBookingId))
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn)
-            ->with('accommodations:id')
             ->get()
-            ->flatMap(fn ($b) => $b->accommodations->pluck('id'))
+            ->flatMap(function ($b) {
+                // Use relationship method (with parentheses) para hindi ma-override ng legacy string attribute
+                $ids = $b->accommodations()->pluck('accommodations.id')->toArray();
+
+                // Fallback: comma-separated names from legacy attribute
+                if (empty($ids)) {
+                    $raw = $b->getAttributes()['accommodations'] ?? null;
+                    if ($raw) {
+                        $names = array_filter(array_map('trim', explode(',', $raw)));
+                        $ids = Accommodation::whereIn('name', $names)->pluck('id')->toArray();
+                    }
+                }
+
+                return $ids;
+            })
             ->unique()
             ->values()
             ->all();

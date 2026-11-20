@@ -217,8 +217,8 @@
                         </div>
                         <div class="detail-item">
                             <strong>Accommodation</strong>
-                            @if($booking->accommodations && $booking->accommodations->isNotEmpty())
-                                {{ $booking->accommodations->pluck('name')->join(', ') }}
+                            @if($booking->accommodations)
+                                {{ $booking->accommodations }}
                             @else
                                 <em style="color: #9ca3af;">N/A (Old Booking)</em>
                             @endif

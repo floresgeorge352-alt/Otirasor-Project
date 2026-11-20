@@ -62,7 +62,7 @@ class BookingController extends Controller
             'number_of_kids' => 'required|integer|min:0',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
-            'payment_method' => 'required|in:Cash,GCash',
+            'payment_method' => 'required|in:GCash', // <-- CASH REMOVED
             'gcash_reference' => [
                 'nullable',
                 'required_if:payment_method,GCash',
@@ -190,7 +190,7 @@ class BookingController extends Controller
                 'payment_method' => $request->payment_method,
                 'gcash_reference' => $request->gcash_reference,
                 'gcash_proof' => $gcashProof,
-                'payment_status' => $request->payment_method === 'GCash' ? 'For Verification' : 'Not Applicable',
+                'payment_status' => 'For Verification', // <-- CASH LOGIC REMOVED
                 'accommodation_total' => $accommodationTotal,
                 'facility_total' => $facilityTotal,
                 'pool_adults' => $poolAdults,
@@ -228,25 +228,15 @@ class BookingController extends Controller
                   ->orWhere('session_id', request()->session()->getId());
             })->whereNull('released_at')->update(['released_at' => now()]);
 
-            // === AUTO-LOG INITIAL PAYMENT STATUS ===
-            if ($booking->payment_method === 'GCash') {
-                \App\Models\PaymentLog::create([
-                    'booking_id' => $booking->id,
-                    'user_id' => auth()->id(),
-                    'payment_method' => $booking->payment_method,
-                    'status' => 'For Verification',
-                    'reference_number' => $booking->gcash_reference,
-                    'remarks' => 'Initial GCash payment submitted by customer.',
-                ]);
-            } else {
-                \App\Models\PaymentLog::create([
-                    'booking_id' => $booking->id,
-                    'user_id' => auth()->id(),
-                    'payment_method' => $booking->payment_method,
-                    'status' => 'Not Applicable',
-                    'remarks' => 'Cash payment selected.',
-                ]);
-            }
+            // === AUTO-LOG INITIAL PAYMENT STATUS (GCASH ONLY) ===
+            \App\Models\PaymentLog::create([
+                'booking_id' => $booking->id,
+                'user_id' => auth()->id(),
+                'payment_method' => 'GCash',
+                'status' => 'For Verification',
+                'reference_number' => $booking->gcash_reference,
+                'remarks' => 'Initial GCash payment submitted by customer.',
+            ]);
             // =========================================
 
             User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
@@ -382,6 +372,7 @@ class BookingController extends Controller
 
         DB::transaction(function () use ($booking, $request) {
             $booking->update([
+                'status' => 'Pending Cancellation',
                 'cancellation_requested_at' => now(),
                 'cancellation_reason' => $request->cancellation_reason,
                 'cancellation_status' => 'Pending',

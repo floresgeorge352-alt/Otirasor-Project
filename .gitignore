@@ -32,3 +32,6 @@ laravel.zip
 *.zip
 /database/database/
 /run_backup.bat
+
+Recovery_code_auth.txt
+*.txt

@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\RewardPoint;
-use App\Notifications\BookingCancelledNotification;
+use App\Notifications\CancellationRequestedNotification;
 use App\Notifications\RefundRequestedNotification;
 use Illuminate\Http\Request;
 
@@ -39,6 +40,13 @@ class CustomerBookingController extends Controller
         return redirect('/my-bookings');
     }
 
+    // ✅ BAGONG METHOD PARA SA "MARK ALL AS READ"
+    public function markAllAsRead()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back()->with('success', 'All notifications marked as read.');
+    }
+
     // =========================================================
     // CANCELLATION REQUEST (HINDI DIRECT CANCEL)
     // =========================================================
@@ -61,15 +69,17 @@ class CustomerBookingController extends Controller
             'cancellation_reason' => 'required|string|max:500',
         ]);
 
-        $booking->update([
-            'status' => 'Pending Cancellation',
-            'cancellation_status' => 'Pending',
-            'cancellation_reason' => $request->cancellation_reason,
-            'cancellation_requested_at' => now(),
-        ]);
+        DB::transaction(function () use ($booking, $request) {
+            $booking->update([
+                'status' => 'Pending Cancellation',
+                'cancellation_status' => 'Pending',
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancellation_requested_at' => now(),
+            ]);
 
-        User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
-            $admin->notify(new BookingCancelledNotification($booking));
+            User::where('role', 'admin')->get()->each(function ($admin) use ($booking) {
+                $admin->notify(new CancellationRequestedNotification($booking));
+            });
         });
 
         return back()->with('success', 'Cancellation request submitted. Please wait for admin approval.');

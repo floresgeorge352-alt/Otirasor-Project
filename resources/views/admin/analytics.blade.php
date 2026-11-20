@@ -161,7 +161,8 @@
 
     <div class="chart-grid">
         <div class="recent-card">
-            <h3 class="chart-title">Payment Method (Cash vs GCash)</h3>
+            <!-- CHANGED TITLE HERE -->
+            <h3 class="chart-title">Payment Method (GCash Only)</h3>
             <div style="position: relative; height: 300px; width: 100%;">
                 <canvas id="paymentChart"></canvas>
             </div>
@@ -289,7 +290,7 @@
             }
         });
 
-        // --- Payment Method ---
+        // --- Payment Method (GCash Only) ---
         const ctxPayment = document.getElementById('paymentChart').getContext('2d');
         new Chart(ctxPayment, {
             type: 'doughnut',
@@ -297,7 +298,7 @@
                 labels: {!! json_encode(array_keys($paymentMethodData)) !!},
                 datasets: [{
                     data: {!! json_encode(array_values($paymentMethodData)) !!},
-                    backgroundColor: ['#10b981', '#0077b6'],
+                    backgroundColor: ['#10b981'], // Isang kulay lang (Green) para sa GCash
                     borderWidth: 1
                 }]
             },

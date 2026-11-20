@@ -19,7 +19,10 @@
         .logout-btn { background: none; border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Poppins', sans-serif; }
 
         .container { width: 800px; max-width: 92%; margin: 40px auto 60px; }
-        h1 { color: #023e8a; text-align: center; margin-bottom: 30px; font-size: 32px; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { color: #023e8a; font-size: 32px; margin: 0; }
+        .mark-read-btn { padding: 10px 20px; background: #0077b6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,119,182,0.2); }
+        .mark-read-btn:hover { background: #005f8f; transform: translateY(-2px); }
 
         .notif-card {
             background: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 15px;
@@ -52,7 +55,17 @@
 </nav>
 
 <div class="container">
-    <h1>Notifications</h1>
+    <div class="header-actions">
+        <h1>Notifications</h1>
+        
+        {{-- ✅ MARK ALL AS READ BUTTON --}}
+        @if(auth()->user()->unreadNotifications->count() > 0)
+            <form method="POST" action="{{ route('customer.notifications.mark-all-read') }}">
+                @csrf
+                <button type="submit" class="mark-read-btn">✓ Mark All as Read</button>
+            </form>
+        @endif
+    </div>
 
     @forelse($notifications as $notification)
         <a href="/notifications/{{ $notification->id }}/open" class="notif-card {{ $notification->read_at ? '' : 'unread' }}">
