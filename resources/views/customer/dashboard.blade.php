@@ -397,13 +397,16 @@
                 <div class="booking-info">
                     <h4>Booking #{{ $latestBooking->id }}</h4>
                     <p>
-                        @if($latestBooking->accommodations && $latestBooking->accommodations->isNotEmpty())
-                            {{ $latestBooking->accommodations->pluck('name')->join(', ') }}
-                        @else
-                            <em style="color: #9ca3af;">N/A (Old Booking)</em>
-                        @endif
-                    </p>
-                </div>
+    @php
+        $accNames = $latestBooking->accommodations()->get()->pluck('name')->join(', ');
+    @endphp
+
+    @if($accNames !== '')
+        {{ $accNames }}
+    @else
+        <em style="color: #9ca3af;">N/A (Old Booking)</em>
+    @endif
+</p>
                 <div>
                     @if($latestBooking->status === 'Pending')
                         <span class="status status-pending">Pending</span>

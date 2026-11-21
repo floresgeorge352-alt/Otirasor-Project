@@ -43,6 +43,12 @@
             border-top: 2px solid #0077b6;
             padding-top: 10px;
         }
+        .discount-line {
+            font-size: 13px;
+            font-weight: normal;
+            color: #666;
+            margin-bottom: 4px;
+        }
         .footer {
             text-align: center;
             margin-top: 50px;
@@ -79,8 +85,12 @@
         <tr>
             <td>Accommodations</td>
             <td>
-                @if($booking->accommodations && $booking->accommodations->isNotEmpty())
-                    {{ $booking->accommodations->pluck('name')->join(', ') }}
+                @php
+                    $accNames = $booking->accommodations()->get()->pluck('name')->join(', ');
+                @endphp
+
+                @if($accNames !== '')
+                    {{ $accNames }}
                 @else
                     N/A (Old Booking)
                 @endif
@@ -96,8 +106,29 @@
         </tr>
     </table>
 
+    @php
+        $subTotal = ($booking->accommodation_total ?? 0) + ($booking->facility_total ?? 0);
+        $promoDiscount = $booking->discount_amount ?? 0;
+        $rewardDiscount = $booking->reward_discount ?? 0;
+        $grandTotal = $subTotal - $promoDiscount - $rewardDiscount;
+    @endphp
+
     <div class="total">
-        Total Amount: PHP {{ number_format($booking->accommodation_total + $booking->facility_total, 2) }}
+        @if($promoDiscount > 0 || $rewardDiscount > 0)
+            <div class="discount-line">Subtotal: PHP {{ number_format($subTotal, 2) }}</div>
+        @endif
+
+        @if($promoDiscount > 0)
+            <div class="discount-line">
+                Promo Discount @if($booking->promo_code)({{ $booking->promo_code }})@endif: -PHP {{ number_format($promoDiscount, 2) }}
+            </div>
+        @endif
+
+        @if($rewardDiscount > 0)
+            <div class="discount-line">Rewards Discount: -PHP {{ number_format($rewardDiscount, 2) }}</div>
+        @endif
+
+        Total Amount: PHP {{ number_format($grandTotal, 2) }}
     </div>
 
     <div class="footer">

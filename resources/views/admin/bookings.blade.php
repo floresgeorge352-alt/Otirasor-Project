@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin - Bookings</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +24,7 @@
         .nav-links { display: flex; align-items: center; gap: 8px; }
         nav a { color: #374151; text-decoration: none; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; position: relative; display: inline-flex; align-items: center; }
         nav a:hover { background: #eff6ff; color: #0077b6; }
-        
+
         .notification-badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; margin-left: 5px; display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; }
 
         .logout-btn { background: none; border: none; color: #374151; padding: 9px 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; transition: 0.2s; }
@@ -50,7 +51,7 @@
         .filter-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 15px; border-radius: 9px; border: 1px solid #e5e7eb; background: #ffffff; color: #374151; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s ease; }
         .filter-btn:hover { background: #f8fafc; border-color: #bfdbfe; color: #023e8a; }
         .filter-btn.active { background: #023e8a; color: #ffffff; border-color: #023e8a; box-shadow: 0 4px 10px rgba(2, 62, 138, 0.2); }
-        
+
         .pending-filter.active { background: #856404; border-color: #856404; box-shadow: 0 4px 10px rgba(133, 100, 4, 0.2); }
         .confirmed-filter.active { background: #2e7d32; border-color: #2e7d32; box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2); }
         .checkedin-filter.active { background: #084298; border-color: #084298; box-shadow: 0 4px 10px rgba(8, 66, 152, 0.2); }
@@ -80,12 +81,10 @@
         .confirmed { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .rejected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .cancelled { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
-        
         .checked-in { background: #cfe2ff; color: #084298; border: 1px solid #b6d4fe; }
         .checked-out { background: #e0cffc; color: #432874; border: 1px solid #d0bfff; }
         .completed { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
         .no-show { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-        
         .refund-pending { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
         .pending-cancellation { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
@@ -168,7 +167,7 @@
         .refund-section.pending-refund h3 { color: #991b1b; }
         .refund-section.approved-refund h3 { color: #166534; }
         .refund-section.rejected-refund h3 { color: #721c24; }
-        
+
         .refund-forms-wrapper { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
         .refund-form-box { flex: 1; min-width: 250px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; }
         .refund-form-box input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; font-family: 'Poppins', sans-serif; font-size: 13px; }
@@ -204,7 +203,7 @@
 
         .verify-payment-btn, .checkout-btn { background: #3b82f6; }
         .verify-payment-btn:hover, .checkout-btn:hover { background: #2563eb; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }
-        
+
         .mark-cleaned-btn { background: #8b5cf6; }
         .mark-cleaned-btn:hover { background: #7c3aed; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transform: translateY(-1px); }
 
@@ -250,6 +249,12 @@
             .grand-total { flex-direction: column; align-items: flex-start; }
             .booking-filters { gap: 7px; }
             .filter-btn { padding: 9px 11px; font-size: 12px; }
+        }
+
+        /* Animation para sa bagong booking */
+        @keyframes highlight {
+            0% { background-color: #fef3c7; border-color: #f59e0b; }
+            100% { background-color: #ffffff; border-color: #e5e7eb; }
         }
     </style>
 </head>
@@ -334,9 +339,7 @@
         <a href="/admin/bookings?filter=completed" class="filter-btn completed-filter {{ $filter == 'completed' ? 'active' : '' }}">🏁 Completed</a>
         <a href="/admin/bookings?filter=rejected" class="filter-btn rejected-filter {{ $filter == 'rejected' ? 'active' : '' }}">❌ Rejected</a>
         <a href="/admin/bookings?filter=cancelled" class="filter-btn cancelled-filter {{ $filter == 'cancelled' ? 'active' : '' }}">🚫 Cancelled</a>
-        
         <a href="/admin/bookings?filter=pending_cancellation" class="filter-btn pendingcancellation-filter {{ $filter == 'pending_cancellation' ? 'active' : '' }}">⏳ Pending Cancellation</a>
-        
         <a href="/admin/bookings?filter=refund_pending" class="filter-btn refundpending-filter {{ $filter == 'refund_pending' ? 'active' : '' }}">💸 Refund Pending</a>
     </div>
 
@@ -367,26 +370,52 @@
         </div>
     @else
         @foreach($bookings as $booking)
+
             @php
+                /*
+                 * SAVED RATE SNAPSHOTS
+                 * Use the rates saved when the booking was created.
+                 * Fallback values are only for older bookings without snapshots.
+                 */
+
+                $entranceAdultRate = (float) ($booking->entrance_adult_rate ?? 20);
+                $entranceChildRate = (float) ($booking->entrance_child_rate ?? 10);
+                $swimmingAdultRate = (float) ($booking->swimming_adult_rate ?? 70);
+                $swimmingChildRate = (float) ($booking->swimming_child_rate ?? 50);
+
+                $entranceAdults = (int) ($booking->number_of_adults ?? 0);
+                $entranceKids = (int) ($booking->number_of_kids ?? 0);
+
                 $poolAdults = (int) ($booking->pool_adults ?? 0);
                 $poolKids = (int) ($booking->pool_kids ?? 0);
-                $entranceTotal = ((int) ($booking->number_of_adults ?? 0) * 20) + ((int) ($booking->number_of_kids ?? 0) * 10);
-                $poolTotal = ($poolAdults * 70) + ($poolKids * 50);
-                
-                $subtotal = ($booking->accommodation_total ?? 0) + ($booking->facility_total ?? 0);
-                $discount = $booking->discount_amount ?? 0;
-                $rewardDiscount = $booking->reward_discount ?? 0;
-                $grandTotal = $subtotal - $discount - $rewardDiscount;
+
+                $entranceTotal =
+                    ($entranceAdults * $entranceAdultRate) +
+                    ($entranceKids * $entranceChildRate);
+
+                $poolTotal =
+                    ($poolAdults * $swimmingAdultRate) +
+                    ($poolKids * $swimmingChildRate);
+
+                $accommodationTotal = (float) ($booking->accommodation_total ?? 0);
+                $facilityTotal = (float) ($booking->facility_total ?? 0);
+
+                $subtotal = $accommodationTotal + $facilityTotal;
+                $discount = (float) ($booking->discount_amount ?? 0);
+                $rewardDiscount = (float) ($booking->reward_discount ?? 0);
+
+                $grandTotal = max(0, $subtotal - $discount - $rewardDiscount);
             @endphp
 
             <div class="booking" id="booking-{{ $booking->id }}" data-booking-id="{{ $booking->id }}">
-                
+
                 <div class="booking-summary" onclick="toggleBooking({{ $booking->id }})">
                     <div class="booking-top">
                         <div class="guest-info">
                             <h2>{{ $booking->guest_name }}</h2>
                             <span class="booking-id">Booking #{{ $booking->id }}</span>
                         </div>
+
                         <div class="summary-status">
                             @if($booking->status == 'Pending')
                                 <span class="status pending">Pending</span>
@@ -421,14 +450,17 @@
                             <span class="summary-label">📅 Check-in</span>
                             <span class="summary-value">{{ $booking->check_in }}</span>
                         </div>
+
                         <div class="summary-item">
                             <span class="summary-label">📅 Check-out</span>
                             <span class="summary-value">{{ $booking->check_out }}</span>
                         </div>
+
                         <div class="summary-item">
                             <span class="summary-label">👥 Guests</span>
                             <span class="summary-value">{{ $booking->number_of_guests }}</span>
                         </div>
+
                         <div class="summary-item">
                             <span class="summary-label">💰 Total</span>
                             <span class="summary-total">₱{{ number_format($grandTotal, 2) }}</span>
@@ -439,7 +471,7 @@
                 </div>
 
                 <div class="booking-details">
-                    
+
                     <div class="detail-section">
                         <h3>👤 Guest Information</h3>
                         <div class="detail-row"><strong>Guest Name</strong><span>{{ $booking->guest_name }}</span></div>
@@ -451,19 +483,30 @@
                     <div class="detail-section">
                         <h3>📅 Booking Information</h3>
                         <div class="detail-row"><strong>Accommodation</strong><span>{{ $booking->accommodations }}</span></div>
+
                         <div class="detail-row">
                             <strong>Status</strong>
                             <span>
-                                @if($booking->status == 'Pending') <span class="status pending">Pending</span>
-                                @elseif($booking->status == 'Confirmed') <span class="status confirmed">Confirmed</span>
-                                @elseif($booking->status == 'Checked In') <span class="status checked-in">Checked In</span>
-                                @elseif($booking->status == 'Checked Out') <span class="status checked-out">Checked Out</span>
-                                @elseif($booking->status == 'Completed') <span class="status completed">Completed</span>
-                                @elseif($booking->status == 'No Show') <span class="status no-show">No Show</span>
-                                @elseif($booking->status == 'Rejected') <span class="status rejected">Rejected</span>
-                                @elseif($booking->status == 'Cancelled') <span class="status cancelled">Cancelled</span>
-                                @elseif($booking->status == 'Pending Cancellation') <span class="status pending-cancellation">Pending Cancellation</span>
-                                @else <span class="status">{{ $booking->status }}</span>
+                                @if($booking->status == 'Pending')
+                                    <span class="status pending">Pending</span>
+                                @elseif($booking->status == 'Confirmed')
+                                    <span class="status confirmed">Confirmed</span>
+                                @elseif($booking->status == 'Checked In')
+                                    <span class="status checked-in">Checked In</span>
+                                @elseif($booking->status == 'Checked Out')
+                                    <span class="status checked-out">Checked Out</span>
+                                @elseif($booking->status == 'Completed')
+                                    <span class="status completed">Completed</span>
+                                @elseif($booking->status == 'No Show')
+                                    <span class="status no-show">No Show</span>
+                                @elseif($booking->status == 'Rejected')
+                                    <span class="status rejected">Rejected</span>
+                                @elseif($booking->status == 'Cancelled')
+                                    <span class="status cancelled">Cancelled</span>
+                                @elseif($booking->status == 'Pending Cancellation')
+                                    <span class="status pending-cancellation">Pending Cancellation</span>
+                                @else
+                                    <span class="status">{{ $booking->status }}</span>
                                 @endif
                             </span>
                         </div>
@@ -471,29 +514,55 @@
 
                     <div class="accommodation-total">
                         <div class="accommodation-total-label">Accommodation Total</div>
-                        <div class="accommodation-total-value">₱{{ number_format($booking->accommodation_total ?? 0, 2) }}</div>
+                        <div class="accommodation-total-value">₱{{ number_format($accommodationTotal, 2) }}</div>
                     </div>
 
-                    @if(($booking->facility_total ?? 0) > 0)
+                    @if($facilityTotal > 0)
                         <div class="facility-details single-column">
                             <h3>🏖️ Beach / Swimming Pool Details</h3>
+
                             <div class="facility-row">
                                 <span class="facility-row-label">Beach Entrance - Adults</span>
-                                <span class="facility-row-value">{{ $booking->number_of_adults }} × ₱20 = ₱{{ number_format(($booking->number_of_adults ?? 0) * 20, 2) }}</span>
+                                <span class="facility-row-value">
+                                    {{ $entranceAdults }} × ₱{{ number_format($entranceAdultRate, 2) }}
+                                    = ₱{{ number_format($entranceAdults * $entranceAdultRate, 2) }}
+                                </span>
                             </div>
+
                             <div class="facility-row">
                                 <span class="facility-row-label">Beach Entrance - Kids</span>
-                                <span class="facility-row-value">{{ $booking->number_of_kids }} × ₱10 = ₱{{ number_format(($booking->number_of_kids ?? 0) * 10, 2) }}</span>
+                                <span class="facility-row-value">
+                                    {{ $entranceKids }} × ₱{{ number_format($entranceChildRate, 2) }}
+                                    = ₱{{ number_format($entranceKids * $entranceChildRate, 2) }}
+                                </span>
                             </div>
+
                             <div class="facility-row">
                                 <span class="facility-row-label">Entrance Total</span>
                                 <span class="facility-row-value">₱{{ number_format($entranceTotal, 2) }}</span>
                             </div>
 
                             @if($poolAdults > 0 || $poolKids > 0)
-                                <div class="facility-row"><span class="facility-row-label">Swimming Pool - Adults</span><span class="facility-row-value">{{ $poolAdults }} × ₱70 = ₱{{ number_format($poolAdults * 70, 2) }}</span></div>
-                                <div class="facility-row"><span class="facility-row-label">Swimming Pool - Kids</span><span class="facility-row-value">{{ $poolKids }} × ₱50 = ₱{{ number_format($poolKids * 50, 2) }}</span></div>
-                                <div class="facility-row"><span class="facility-row-label">Swimming Pool Total</span><span class="facility-row-value">₱{{ number_format($poolTotal, 2) }}</span></div>
+                                <div class="facility-row">
+                                    <span class="facility-row-label">Swimming Pool - Adults</span>
+                                    <span class="facility-row-value">
+                                        {{ $poolAdults }} × ₱{{ number_format($swimmingAdultRate, 2) }}
+                                        = ₱{{ number_format($poolAdults * $swimmingAdultRate, 2) }}
+                                    </span>
+                                </div>
+
+                                <div class="facility-row">
+                                    <span class="facility-row-label">Swimming Pool - Kids</span>
+                                    <span class="facility-row-value">
+                                        {{ $poolKids }} × ₱{{ number_format($swimmingChildRate, 2) }}
+                                        = ₱{{ number_format($poolKids * $swimmingChildRate, 2) }}
+                                    </span>
+                                </div>
+
+                                <div class="facility-row">
+                                    <span class="facility-row-label">Swimming Pool Total</span>
+                                    <span class="facility-row-value">₱{{ number_format($poolTotal, 2) }}</span>
+                                </div>
                             @else
                                 <div class="facility-row">
                                     <span class="facility-row-label">Swimming Pool</span>
@@ -504,10 +573,12 @@
 
                         <div class="facility-total single-column">
                             <div class="facility-total-label">🏖️ Beach / Swimming Pool Total</div>
-                            <div class="facility-total-value">₱{{ number_format($booking->facility_total ?? 0, 2) }}</div>
+                            <div class="facility-total-value">₱{{ number_format($facilityTotal, 2) }}</div>
                         </div>
                     @else
-                        <div class="facility-not-selected single-column">🏖️ <strong>Beach / Swimming Pool:</strong> Not Selected</div>
+                        <div class="facility-not-selected single-column">
+                            🏖️ <strong>Beach / Swimming Pool:</strong> Not Selected
+                        </div>
                     @endif
 
                     @if($discount > 0)
@@ -532,15 +603,21 @@
                     <div class="detail-section">
                         <h3>💳 Payment Information</h3>
                         <div class="detail-row"><strong>Payment Method</strong><span>{{ $booking->payment_method }}</span></div>
+
                         @if($booking->payment_method == 'GCash')
                             <div class="detail-row"><strong>GCash Reference</strong><span>{{ $booking->gcash_reference }}</span></div>
+
                             <div class="detail-row">
                                 <strong>Payment Status</strong>
                                 <span>
-                                    @if($booking->payment_status == 'For Verification') <span class="payment-status payment-for-verification">For Verification</span>
-                                    @elseif($booking->payment_status == 'Verified') <span class="payment-status payment-verified">Verified</span>
-                                    @elseif($booking->payment_status == 'Rejected') <span class="payment-status payment-rejected">Rejected</span>
-                                    @else <span class="payment-status payment-not-applicable">{{ $booking->payment_status }}</span>
+                                    @if($booking->payment_status == 'For Verification')
+                                        <span class="payment-status payment-for-verification">For Verification</span>
+                                    @elseif($booking->payment_status == 'Verified')
+                                        <span class="payment-status payment-verified">Verified</span>
+                                    @elseif($booking->payment_status == 'Rejected')
+                                        <span class="payment-status payment-rejected">Rejected</span>
+                                    @else
+                                        <span class="payment-status payment-not-applicable">{{ $booking->payment_status }}</span>
                                     @endif
                                 </span>
                             </div>
@@ -575,6 +652,7 @@
                                     @csrf
                                     <button type="submit" class="verify-payment-btn">Verify Payment</button>
                                 </form>
+
                                 <form method="POST" action="/admin/bookings/{{ $booking->id }}/reject-payment" class="payment-rejection-form">
                                     @csrf
                                     <label for="payment-rejection-{{ $booking->id }}">Reason for Payment Rejection</label>
@@ -606,16 +684,22 @@
                             $cancellationService = app(\App\Services\CancellationService::class);
                             $refundData = $cancellationService->computeRefund($booking);
                         @endphp
+
                         <div class="cancellation-request single-column" style="background: #fff7ed; border-color: #fed7aa;">
                             <h3 style="color: #c2410c;">Cancellation Request (Pending Approval)</h3>
                             <p><strong>Policy Applied:</strong> {{ $refundData['policy'] }}</p>
-                            <p style="font-size: 16px; margin-top: 5px;"><strong>Refund Amount:</strong> <span style="color: #c2410c; font-weight: 800;">₱{{ number_format($refundData['amount'], 2) }}</span> ({{ $refundData['percentage'] }}%)</p>
-                            
+                            <p style="font-size: 16px; margin-top: 5px;">
+                                <strong>Refund Amount:</strong>
+                                <span style="color: #c2410c; font-weight: 800;">₱{{ number_format($refundData['amount'], 2) }}</span>
+                                ({{ $refundData['percentage'] }}%)
+                            </p>
+
                             <div class="actions" onclick="event.stopPropagation()" style="margin-top: 15px;">
                                 <form method="POST" action="/admin/bookings/{{ $booking->id }}/approve-cancellation" onsubmit="return confirm('Approve this cancellation? The booking will be cancelled and ₱{{ number_format($refundData['amount'], 2) }} will be refunded.');">
                                     @csrf
                                     <button type="submit" class="approve-cancellation-btn">Approve Cancellation</button>
                                 </form>
+
                                 <form method="POST" action="/admin/bookings/{{ $booking->id }}/reject-cancellation" onsubmit="return confirm('Reject this cancellation? The booking will remain confirmed.');">
                                     @csrf
                                     <button type="submit" class="reject-cancellation-btn">Reject Cancellation</button>
@@ -628,27 +712,30 @@
                         <div class="refund-section single-column pending-refund">
                             <h3>⏳ Refund Request Pending</h3>
                             <p><strong>Customer Reason:</strong> {{ $booking->refund_request_reason }}</p>
-                            
+
                             <div class="refund-forms-wrapper" onclick="event.stopPropagation()" style="display: block; margin-top: 15px;">
                                 <form method="POST" action="{{ route('admin.bookings.approve-refund', $booking->id) }}" enctype="multipart/form-data" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 15px;">
                                     @csrf
+
                                     <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">GCash Reference No. (Required)</label>
                                     <input type="text" name="refund_reference" placeholder="e.g. 1234567890123" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
-                                    
+
                                     <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">Message to Customer (Optional)</label>
                                     <input type="text" name="refund_message" placeholder="e.g. Nai-send na po mga 9:30 PM." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
 
                                     <label style="font-weight: bold; color: #166534; display: block; margin-bottom: 5px;">Upload Refund Proof (Optional)</label>
                                     <input type="file" name="refund_proof" accept=".jpg,.jpeg,.png,.pdf" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; background: white;">
                                     <small style="display: block; color: #64748b; margin-bottom: 10px;">Max: 5MB (JPG, PNG, or PDF)</small>
-                                    
+
                                     <button type="submit" class="approve-refund-btn" style="width:100%;" onclick="return confirm('Approve and mark this refund as processed?')">Approve & Mark as Refunded</button>
                                 </form>
 
                                 <form method="POST" action="{{ route('admin.bookings.reject-refund', $booking->id) }}" style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
                                     @csrf
+
                                     <label style="font-weight: bold; color: #991b1b; display: block; margin-bottom: 5px;">Reason for Rejection (Required)</label>
                                     <input type="text" name="refund_notes" placeholder="Explain why it's rejected..." required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
+
                                     <button type="submit" class="reject-refund-btn" style="width:100%;" onclick="return confirm('Reject this refund?')">Reject Refund</button>
                                 </form>
                             </div>
@@ -658,9 +745,11 @@
                             <h3>✅ Refund Processed</h3>
                             <p><strong>Refunded At:</strong> {{ \Carbon\Carbon::parse($booking->refunded_at)->format('M d, Y h:i A') }}</p>
                             <p><strong>GCash Ref:</strong> {{ $booking->refund_reference }}</p>
+
                             @if($booking->refund_message)
                                 <p><strong>Message to Customer:</strong> {{ $booking->refund_message }}</p>
                             @endif
+
                             @if($booking->refund_proof)
                                 <p><strong>Proof of Refund:</strong> <a href="{{ asset('storage/' . $booking->refund_proof) }}" target="_blank" style="color: #166534; text-decoration: underline; font-weight: bold;">Click to view file</a></p>
                             @endif
@@ -675,7 +764,7 @@
                     @if($booking->status == 'Cancelled' && $booking->payment_method == 'GCash' && $booking->refund_status !== 'Pending' && $booking->refund_status !== 'Refunded' && $booking->refund_status !== 'Rejected')
                         <div class="refund-section single-column pending-refund" style="margin-top: 20px; background: #f0fdf4; border: 1px solid #bbf7d0;">
                             <h3 style="color: #166534;">💰 GCash Refund Status</h3>
-                            
+
                             <form method="POST" action="/admin/bookings/{{ $booking->id }}/refund" onclick="event.stopPropagation()">
                                 @csrf
                                 <textarea name="refund_notes" placeholder="Enter GCash reference or refund notes..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; font-family: 'Poppins', sans-serif; font-size: 14px;"></textarea>
@@ -690,7 +779,9 @@
                                 @csrf
                                 <button type="submit" class="approve-btn">Approve</button>
                             </form>
+
                             <button type="button" class="reject-btn" onclick="showRejectForm({{ $booking->id }})">Reject</button>
+
                             <div id="reject-form-{{ $booking->id }}" class="rejection-form" style="display: none; width: 100%;">
                                 <form method="POST" action="/admin/bookings/{{ $booking->id }}/reject" style="display: block;">
                                     @csrf
@@ -709,6 +800,7 @@
                                 @csrf
                                 <button type="submit" class="checkin-btn">✅ Check In</button>
                             </form>
+
                             <form method="POST" action="{{ route('admin.bookings.noShow', $booking) }}" onsubmit="return confirm('Mark this booking as No Show?')">
                                 @csrf
                                 <button type="submit" class="noshow-btn">⚠️ No Show</button>
@@ -777,6 +869,7 @@
         const searchInput = document.getElementById('bookingSearch');
         const searchCount = document.getElementById('searchCount');
         const searchEmpty = document.getElementById('searchEmpty');
+
         if (!searchInput || !searchCount || !searchEmpty) return;
 
         const bookingCards = Array.from(document.querySelectorAll('.booking'));
@@ -789,8 +882,12 @@
             bookingCards.forEach(function (card) {
                 const searchableText = (card.innerText || card.textContent || '').toLocaleLowerCase();
                 const bookingId = card.dataset.bookingId || '';
-                const matches = query === '' || (isBookingIdSearch ? bookingId === query : searchableText.includes(query));
+
+                const matches = query === '' ||
+                    (isBookingIdSearch ? bookingId === query : searchableText.includes(query));
+
                 card.style.display = matches ? '' : 'none';
+
                 if (matches) visibleCount++;
             });
 
@@ -815,6 +912,67 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // =====================================================
+        // 1. AJAX for Verify Payment (para hindi mag-reload)
+        //    Hiwalay ito sa Echo para gumana kahit hindi loaded ang Echo
+        // =====================================================
+        document.querySelectorAll('form[action$="/verify-payment"]').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault(); // Pigilan ang page reload
+
+                const button = this.querySelector('button[type="submit"]');
+                const originalText = button.innerHTML;
+                button.innerHTML = 'Verifying...';
+                button.disabled = true;
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new FormData(this)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Request failed: ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Verification failed.');
+                    }
+
+                    const card = this.closest('.booking');
+
+                    // Palitan ang "For Verification" badge ng "Verified"
+                    const statusBadge = card.querySelector('.payment-for-verification');
+                    if (statusBadge) {
+                        statusBadge.className = 'payment-status payment-verified';
+                        statusBadge.textContent = 'Verified';
+                    }
+
+                    // Itago ang lumang verification actions (Verify + Reject Payment)
+                    const actionSection = this.closest('.actions');
+                    if (actionSection) {
+                        actionSection.remove();
+                    }
+
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    alert('Something went wrong. Please try again.');
+                });
+            });
+        });
+
+        // =====================================================
+        // 2. Realtime notifications (Echo)
+        // =====================================================
         if (!window.Echo) {
             console.warn('Echo is not loaded.');
             return;
@@ -822,48 +980,40 @@
 
         const userId = {{ auth()->id() }};
 
-        // 1. Bagong Booking
-        window.Echo.channel('admin.bookings')
+        // New Booking Notifications
+        window.Echo.private('admin.bookings')
             .listen('BookingCreated', (e) => {
-                console.log('New Booking:', e);
-                
+                console.log('New Booking received:', e);
+
                 if (window.showToast) {
                     window.showToast(
-                        'New Booking!', 
-                        `${e.guest_name} (₱${Number(e.total_amount).toLocaleString()})`, 
+                        'New Booking!',
+                        `${e.guest_name} (₱${Number(e.total_amount).toLocaleString()})`,
                         'info',
                         `/admin/bookings?booking_id=${e.id}`
                     );
                 }
 
-                setTimeout(() => window.location.reload(), 3000); 
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
             });
 
-        // 2. Cancellation & Refund Notifications
+        // Cancellation & Refund Notifications
         window.Echo.private(`App.Models.User.${userId}`)
             .notification((notification) => {
                 console.log('New Notification:', notification);
 
                 if (notification.type === 'cancellation_requested') {
                     if (window.showToast) {
-                        window.showToast(
-                            'Cancellation Request!', 
-                            notification.message, 
-                            'warning',
-                            notification.url
-                        );
+                        window.showToast('Cancellation Request!', notification.message, 'warning', notification.url);
                     }
                     setTimeout(() => window.location.reload(), 3000);
                 }
 
                 if (notification.type === 'refund_requested') {
                     if (window.showToast) {
-                        window.showToast(
-                            'Refund Request!', 
-                            notification.message, 
-                            'warning',
-                            notification.url
-                        );
+                        window.showToast('Refund Request!', notification.message, 'warning', notification.url);
                     }
                     setTimeout(() => window.location.reload(), 3000);
                 }

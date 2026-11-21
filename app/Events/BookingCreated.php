@@ -20,6 +20,11 @@ class BookingCreated implements ShouldBroadcast
         return [new PrivateChannel('admin.bookings')];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'BookingCreated';
+    }
+
     public function broadcastWith(): array
     {
         return [
@@ -29,6 +34,7 @@ class BookingCreated implements ShouldBroadcast
             'check_out' => $this->booking->check_out,
             'status' => $this->booking->status,
             'total_amount' => $this->booking->accommodation_total + $this->booking->facility_total,
+            'number_of_guests' => $this->booking->number_of_guests,
         ];
     }
 }

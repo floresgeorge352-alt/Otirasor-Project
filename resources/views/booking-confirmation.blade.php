@@ -174,8 +174,10 @@
                 <div class="detail">
                     <div class="detail-label">Accommodation</div>
                     <div class="detail-value">
-                        @if($booking->accommodations && $booking->accommodations->isNotEmpty())
-                            {{ $booking->accommodations->pluck('name')->join(', ') }}
+                        {{-- FIX: gamitin ang $accommodationBreakdown galing sa controller
+                             (iwas sa conflict ng column na "accommodations" at ng relationship) --}}
+                        @if(!empty($accommodationBreakdown))
+                            {{ collect($accommodationBreakdown)->pluck('name')->join(', ') }}
                         @else
                             N/A (Old Booking)
                         @endif

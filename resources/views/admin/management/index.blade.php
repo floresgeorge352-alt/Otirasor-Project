@@ -366,11 +366,20 @@
             background: #faf5ff;
         }
 
+
         /* =========================================
-           BACKUPS ACCENT (NEW)
+           BACKUPS ACCENT
         ========================================== */
         .backups-card .card-icon {
             background: #fef3c7;
+        }
+
+
+        /* =========================================
+           FEES ACCENT (NEW)
+        ========================================== */
+        .fees-card .card-icon {
+            background: #dcfce7;
         }
 
 
@@ -602,6 +611,43 @@
 
 
             <!-- =====================================
+                 FEES (ENTRANCE & SWIMMING) - NEW
+            ====================================== -->
+
+            <div class="card fees-card">
+
+                <div>
+
+                    <div class="card-icon">
+                        💵
+                    </div>
+
+
+                    <h3>
+                        Entrance & Swimming Fees
+                    </h3>
+
+
+                    <p>
+                        Manage per-head entrance
+                        and swimming fees, and
+                        view the change history.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="{{ route('admin.fees.index') }}"
+                    class="btn"
+                >
+                    Manage Fees →
+                </a>
+
+            </div>
+
+
+            <!-- =====================================
                  REPORTS
             ====================================== -->
 
@@ -710,7 +756,7 @@
 
 
             <!-- =====================================
-                 DATABASE BACKUPS (NEW CARD)
+                 DATABASE BACKUPS
             ====================================== -->
 
             <div class="card backups-card">

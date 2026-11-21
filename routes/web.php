@@ -22,6 +22,7 @@ use App\Http\Controllers\ReservationHoldController;
 use App\Http\Controllers\EmployeeNotificationController;
 use App\Http\Controllers\AdminBackupController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\AdminFeeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -339,6 +340,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/accommodations/{id}/restore', [AdminAccommodationController::class, 'restore'])->name('admin.accommodations.restore');
     Route::delete('/admin/accommodations/{id}/force-delete', [AdminAccommodationController::class, 'forceDelete'])->name('admin.accommodations.force-delete');
     // =====================================
+
+    // === FEES (ENTRANCE & SWIMMING) ===
+    Route::get('/admin/fees', [AdminFeeController::class, 'index'])->name('admin.fees.index');
+    Route::post('/admin/fees', [AdminFeeController::class, 'store'])->name('admin.fees.store');
+    Route::get('/admin/fees/history', [AdminFeeController::class, 'history'])->name('admin.fees.history');
+    Route::put('/admin/fees/{fee}', [AdminFeeController::class, 'update'])->name('admin.fees.update');
+    Route::post('/admin/fees/{fee}/toggle', [AdminFeeController::class, 'toggle'])->name('admin.fees.toggle');
+    Route::delete('/admin/fees/{fee}', [AdminFeeController::class, 'destroy'])->name('admin.fees.destroy');
+    // ===================================
 
     // === BOOKINGS ===
     Route::get(

@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\ReservationHold;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class AvailabilityService
 {
@@ -47,10 +48,25 @@ class AvailabilityService
             ->values()
             ->all();
 
+        // Kunin ang kasalukuyang user at session
+        $currentUserId = Auth::id();
+        $currentSessionId = session()->getId();
+
         $held = ReservationHold::query()
             ->active()
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn)
+            // I-ignore ang sariling hold ng customer na nagbo-book ngayon
+            ->where(function ($q) use ($currentUserId, $currentSessionId) {
+                // Kung may user, wag isama ang hold niya
+                if ($currentUserId) {
+                    $q->where('user_id', '!=', $currentUserId);
+                }
+                // Kung walang user (guest), check ang session_id
+                if (!$currentUserId && $currentSessionId) {
+                    $q->where('session_id', '!=', $currentSessionId);
+                }
+            })
             ->get()
             ->flatMap(fn ($h) => $h->accommodation_ids ?? [])
             ->unique()

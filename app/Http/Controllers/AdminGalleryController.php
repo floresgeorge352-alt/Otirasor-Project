@@ -8,9 +8,54 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminGalleryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $galleries = Gallery::latest()->get();
+        $query = Gallery::latest();
+
+        // Search across all gallery images
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by category
+        if ($request->filled('category') && $request->category !== 'all') {
+            if ($request->category === 'uncategorized') {
+                $query->where(function ($q) {
+                    $q->whereNull('category')
+                      ->orWhere('category', '');
+                });
+            } else {
+                $query->whereRaw(
+                    'LOWER(category) = ?',
+                    [strtolower($request->category)]
+                );
+            }
+        }
+
+        // Pagination
+        $galleries = $query->paginate(8)->withQueryString();
+
+        // AJAX response
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view(
+                    'admin.gallery._grid',
+                    compact('galleries')
+                )->render(),
+
+                'pagination' => $galleries->hasPages()
+                    ? $galleries->links()->render()
+                    : '',
+
+                'count' => $galleries->total(),
+            ]);
+        }
+
         return view('admin.gallery.index', compact('galleries'));
     }
 
@@ -30,7 +75,7 @@ class AdminGalleryController extends Controller
             'category' => $request->category,
         ]);
 
-        // I-trigger ang Real-Time Event
+        // Trigger Real-Time Event
         \App\Events\GalleryImageAdded::dispatch($gallery);
 
         return back()->with('success', 'Image uploaded successfully.');

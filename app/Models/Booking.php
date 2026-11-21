@@ -26,6 +26,12 @@ class Booking extends Model
         'accommodation_total',
         'facility_total',
 
+        // Entrance and Swimming Fee Rates
+        'entrance_adult_rate',
+        'entrance_child_rate',
+        'swimming_adult_rate',
+        'swimming_child_rate',
+
         // Swimming Pool Guest Counts
         'pool_adults',
         'pool_kids',
@@ -68,6 +74,12 @@ class Booking extends Model
         'accommodation_total' => 'decimal:2',
         'facility_total' => 'decimal:2',
 
+        // Entrance and Swimming Fee Rates
+        'entrance_adult_rate' => 'decimal:2',
+        'entrance_child_rate' => 'decimal:2',
+        'swimming_adult_rate' => 'decimal:2',
+        'swimming_child_rate' => 'decimal:2',
+
         'pool_adults' => 'integer',
         'pool_kids' => 'integer',
 
@@ -100,23 +112,17 @@ class Booking extends Model
         return $this->hasOne(Review::class);
     }
 
-    // =========================================================
-    // ✅ BAGONG DAGDAG: Payment Logs Relationship
-    // =========================================================
+    // Payment Logs Relationship
     public function paymentLogs()
     {
         return $this->hasMany(PaymentLog::class)->latest();
     }
 
-    // =========================================================
-    // ✅ ACCESSOR — Net Total (single source of truth)
-    // =========================================================
+    // Net Total Accessor
     /**
-     * Compute the net total (after discount + reward discount).
-     * Formula: (accommodation_total + facility_total) - discount_amount - reward_discount
-     *
-     * Gamitin ito sa LAHAT ng revenue computations
-     * (dashboard, analytics, reports, transactions, payments).
+     * Compute the net total after discount and reward discount.
+     * Formula: (accommodation_total + facility_total)
+     *          - discount_amount - reward_discount
      */
     public function getNetTotalAttribute(): float
     {
@@ -129,12 +135,10 @@ class Booking extends Model
         return $subtotal - $discount - $rewardDiscount;
     }
 
-    // =========================================================
-    // ✅ BAGONG ACCESSOR — Accommodations (for legacy support)
-    // =========================================================
+    // Accommodations Accessor (Legacy Support)
     /**
-     * Fallback accessor para sa 'accommodations' attribute.
-     * Kung may laman ang pivot table (many-to-many), doon kukuha.
+     * Fallback accessor para sa accommodations attribute.
+     * Kung may laman ang pivot table, doon kukuha.
      * Kung wala, ibabalik ang lumang comma-separated string.
      */
     public function getAccommodationsAttribute($value)
@@ -142,14 +146,16 @@ class Booking extends Model
         // 1. Check if relationship is already loaded
         if ($this->relationLoaded('accommodations')) {
             $names = $this->relations['accommodations']->pluck('name')->toArray();
+
             if (!empty($names)) {
                 return implode(', ', $names);
             }
         }
 
-        // 2. Check if may laman ang pivot table (DB query)
+        // 2. Check if may laman ang pivot table
         if ($this->accommodations()->exists()) {
             $names = $this->accommodations()->pluck('name')->toArray();
+
             if (!empty($names)) {
                 return implode(', ', $names);
             }

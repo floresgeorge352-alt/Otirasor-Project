@@ -55,6 +55,22 @@
         .card-content p { color: #71808e; font-size: 13px; line-height: 1.5; }
         .card-arrow { color: #0077b6; font-size: 21px; font-weight: 700; flex-shrink: 0; }
 
+        /* UNIFIED OTIRASOR CARD THEME */
+        .main-card {
+            background: #ffffff !important;
+            border: 1px solid #D6E5F5 !important;
+        }
+        .main-card:hover {
+            background: #ffffff !important;
+            border-color: #0077b6 !important;
+        }
+        .main-card .card-icon {
+            background: #edf7fd !important;
+        }
+        .main-card .card-arrow {
+            color: #0077b6 !important;
+        }
+
         .recent-card { background: white; border: 1px solid #e1e9f0; border-radius: 14px; padding: 22px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045); }
         .recent-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
         .recent-header h3 { color: #023e8a; font-size: 19px; font-weight: 700; }

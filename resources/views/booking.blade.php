@@ -277,16 +277,26 @@
                     <div class="facility-title">🏖️ Beach / Swimming Pool</div>
                     <div class="facility-box">
                         <p class="facility-description">Beach entrance is automatically included based on the number of guests. Swimming pool use is optional.</p>
+                        
+                        <!-- DYNAMIC RATES SA DISPLAY -->
                         <div class="entrance-box">
                             <div class="entrance-header">
-                                <div><strong>🏖️ Beach Entrance</strong><br><small>Adults ₱20 • Kids ₱10 • Automatically charged</small></div>
-                                <div class="entrance-total">₱<span id="entrance_total">30.00</span></div>
+                                <div>
+                                    <strong>🏖️ Beach Entrance</strong><br>
+                                    <small>Adults ₱{{ number_format($entranceAdultFee, 2) }} • Kids ₱{{ number_format($entranceChildFee, 2) }} • Automatically charged</small>
+                                </div>
+                                <div class="entrance-total">₱<span id="entrance_total">0.00</span></div>
                             </div>
                         </div>
+                        
                         <label class="pool-option">
                             <input type="checkbox" name="swimming_pool" value="1" id="swimming_pool" {{ old('swimming_pool') ? 'checked' : '' }}>
-                            <span><strong>🏊 Add Swimming Pool</strong><br><small>Adult ₱70 • Kids ₱50</small></span>
+                            <span>
+                                <strong>🏊 Add Swimming Pool</strong><br>
+                                <small>Adult ₱{{ number_format($swimmingAdultFee, 2) }} • Kids ₱{{ number_format($swimmingChildFee, 2) }}</small>
+                            </span>
                         </label>
+                        
                         <div id="pool-controls" class="pool-controls {{ old('swimming_pool') ? 'active' : '' }}">
                             <div class="pool-controls-title">👥 Who will use the swimming pool?</div>
                             <div class="pool-count-grid">
@@ -311,7 +321,7 @@
                         </div>
                         <div class="facility-total-preview">
                             <span>🧾 Facility Total</span>
-                            <strong>₱<span id="facility_total_preview">30.00</span></strong>
+                            <strong>₱<span id="facility_total_preview">0.00</span></strong>
                         </div>
                     </div>
                 </div>
@@ -376,7 +386,7 @@
 
                 <div class="grand-total-preview">
                     <span>💰 Grand Total</span>
-                    <strong>₱<span id="grand_total_preview">{{ number_format($accommodationTotal + 30, 2) }}</span></strong>
+                    <strong>₱<span id="grand_total_preview">0.00</span></strong>
                 </div>
 
                 <div class="note">
@@ -403,12 +413,12 @@
 </footer>
 
 <script>
-    // ===== BASE VALUES FROM PHP =====
+    // ===== BASE VALUES FROM PHP (DYNAMIC NA) =====
     const accommodationTotal = {{ (float) $accommodationTotal }};
-    const beachAdultRate = 20;
-    const beachKidRate = 10;
-    const poolAdultRate = 70;
-    const poolKidRate = 50;
+    const beachAdultRate = {{ (float) $entranceAdultFee }};
+    const beachKidRate = {{ (float) $entranceChildFee }};
+    const poolAdultRate = {{ (float) $swimmingAdultFee }};
+    const poolKidRate = {{ (float) $swimmingChildFee }};
     
     // Rewards
     const userRewardPoints = {{ auth()->check() ? ($userRewardPoints ?? 0) : 0 }};
