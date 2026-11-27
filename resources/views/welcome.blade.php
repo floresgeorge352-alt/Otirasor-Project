@@ -355,6 +355,9 @@
 
                 @auth
                     <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active-link' : '' }}">Dashboard</a>
+                    
+                    {{-- Tinanggal ang Profile link dahil nasa Dashboard na ito --}}
+                    
                     <form method="POST" action="/logout" style="display:inline; margin: 0;">
                         @csrf
                         <button type="submit" class="btn-nav" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3);">Logout</button>

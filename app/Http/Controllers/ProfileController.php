@@ -14,10 +14,18 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request)
     {
+        $user = $request->user();
+
+        // Redirect customers to the unified My Account page.
+        if ($user->role === 'customer') {
+            return Redirect::route('customer.account');
+        }
+
+        // Keep the existing profile page for Admin and other roles.
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 
@@ -34,7 +42,8 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit')
+            ->with('status', 'profile-updated');
     }
 
     /**

@@ -14,12 +14,55 @@
         body { font-family: 'Poppins', sans-serif; background: #f5f8fc; color: #243b4a; min-height: 100vh; }
         h1, h2 { font-family: 'Montserrat', sans-serif; font-weight: 800; }
 
-        nav { background: #023e8a; padding: 15px 6%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-        .brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; font-weight: bold; }
-        .brand img { width: 40px; height: 40px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
-        .nav-links { display: flex; gap: 20px; }
-        nav a { color: white; text-decoration: none; font-size: 14px; font-weight: 500; }
-        nav a:hover { text-decoration: underline; }
+        /* NAVIGATION (Updated) */
+        nav { 
+            background: #023e8a; 
+            padding: 15px 6%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; font-weight: bold; font-family: 'Montserrat', sans-serif; }
+        .brand img { width: 45px; height: 45px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
+        
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        nav a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
+        nav a:hover, nav a.active { color: #fbbf24; }
+
+        /* AUTH BUTTONS */
+        .btn-nav {
+            background: #fbbf24;
+            color: #111827;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-nav:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4); }
+        
+        .btn-logout {
+            background: transparent;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
         .container { width: 900px; max-width: 92%; margin: 40px auto 60px; }
         h1 { color: #023e8a; text-align: center; margin-bottom: 20px; font-size: 32px; }
@@ -57,7 +100,8 @@
         .empty { background: white; padding: 50px; text-align: center; border-radius: 16px; color: #6b7280; }
 
         @media (max-width: 768px) {
-            nav { flex-direction: column; gap: 10px; }
+            nav { flex-direction: column; gap: 10px; padding: 15px 20px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
             .review-header { flex-direction: column; gap: 10px; }
         }
     </style>
@@ -73,8 +117,20 @@
         <a href="/">Home</a>
         <a href="/about">About</a>
         <a href="/gallery">Gallery</a>
-        <a href="/reviews">Reviews</a>
+        <a href="/reviews" class="active">Reviews</a>
         <a href="/contact">Contact</a>
+
+        {{-- AUTH LOGIC --}}
+        @auth
+            <a href="/dashboard">Dashboard</a>
+            <form method="POST" action="/logout" style="display:inline; margin: 0;">
+                @csrf
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        @else
+            <a href="/login">Login</a>
+            <a href="/register" class="btn-nav">Book Now</a>
+        @endauth
     </div>
 </nav>
 

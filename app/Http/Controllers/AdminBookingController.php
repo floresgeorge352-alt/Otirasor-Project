@@ -12,11 +12,13 @@ use App\Notifications\CancellationApprovedNotification;
 use App\Notifications\CancellationRejectedNotification;
 use App\Notifications\PaymentVerifiedNotification;
 use App\Notifications\PaymentRejectedNotification;
+use App\Notifications\PaymentReopenedNotification;
 use App\Notifications\RefundApprovedNotification;
 use App\Notifications\RefundRejectedNotification;
 use App\Mail\ReservationApproved;
 use App\Mail\ReservationRejected;
 use App\Mail\PaymentRejected;
+use App\Mail\PaymentReopened;
 use App\Mail\RefundProcessedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -311,6 +313,58 @@ class AdminBookingController extends Controller
         return $request->wantsJson()
             ? response()->json(['success' => $msg])
             : redirect('/admin/bookings')->with('success', $msg);
+    }
+
+    public function reopenPayment(Request $request, Booking $booking)
+    {
+        if ($booking->payment_status !== 'Rejected') {
+            return back()->with('error', 'Only rejected payments can be re-opened.');
+        }
+
+        $oldPaymentStatus = $booking->payment_status;
+
+        DB::transaction(function () use ($booking, $oldPaymentStatus) {
+            $booking->update([
+                'payment_status' => 'For Verification',
+                'payment_rejection_reason' => null, // Clear the reason
+            ]);
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'reopen_payment',
+                'model_type' => Booking::class,
+                'model_id' => $booking->id,
+                'old_values' => ['payment_status' => $oldPaymentStatus],
+                'new_values' => ['payment_status' => 'For Verification'],
+                'ip_address' => request()->ip(),
+            ]);
+
+            \App\Models\PaymentLog::create([
+                'booking_id' => $booking->id,
+                'user_id' => auth()->id(),
+                'payment_method' => $booking->payment_method,
+                'status' => 'For Verification',
+                'reference_number' => $booking->gcash_reference,
+                'remarks' => 'Payment re-opened by admin for re-verification.',
+            ]);
+
+            // Send notification to customer (database & email)
+            if ($booking->user) {
+                $booking->user->notify(new PaymentReopenedNotification($booking));
+            }
+
+            $booking->load('user');
+
+            if ($booking->user && $booking->user->email) {
+                try {
+                    Mail::to($booking->user->email)->send(new PaymentReopened($booking));
+                } catch (\Exception $e) {
+                    Log::error('Payment reopened email failed to send: ' . $e->getMessage());
+                }
+            }
+        });
+
+        return back()->with('success', 'Payment has been re-opened. The customer can now resubmit their proof.');
     }
 
     public function refund(Request $request, Booking $booking)

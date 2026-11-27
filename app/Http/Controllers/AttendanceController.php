@@ -14,7 +14,11 @@ class AttendanceController extends Controller
     private function isScheduledWorkDay(User $user, Carbon $date): bool
     {
         $workDays = $user->work_days ?? [];
-        if (!is_array($workDays) || empty($workDays)) return false;
+
+        if (!is_array($workDays) || empty($workDays)) {
+            return false;
+        }
+
         return in_array($date->format('l'), $workDays, true);
     }
 
@@ -24,8 +28,13 @@ class AttendanceController extends Controller
         $isWorkDay = $this->isScheduledWorkDay($user, $today);
 
         $attendance = Attendance::firstOrCreate(
-            ['user_id' => $user->id, 'date' => $today],
-            ['status' => 'Present']
+            [
+                'user_id' => $user->id,
+                'date' => $today->toDateString(),
+            ],
+            [
+                'status' => 'Present',
+            ]
         );
 
         if ($attendance->time_in) {
@@ -36,8 +45,13 @@ class AttendanceController extends Controller
         $lateMinutes = 0;
 
         if ($isWorkDay && $user->regular_time_in) {
-            $scheduledTimeIn = Carbon::parse($today->toDateString() . ' ' . $user->regular_time_in);
-            $lateStartsAt = $scheduledTimeIn->copy()->addMinutes((int) $user->grace_period_minutes);
+            $scheduledTimeIn = Carbon::parse(
+                $today->toDateString() . ' ' . $user->regular_time_in
+            );
+
+            $lateStartsAt = $scheduledTimeIn
+                ->copy()
+                ->addMinutes((int) $user->grace_period_minutes);
 
             if ($timeIn->greaterThan($lateStartsAt)) {
                 $lateMinutes = (int) $lateStartsAt->diffInMinutes($timeIn);
@@ -51,10 +65,16 @@ class AttendanceController extends Controller
         ]);
 
         if (!$isWorkDay) {
-            return back()->with('success', 'Time In recorded on a rest day. Not an approved extra shift.');
+            return back()->with(
+                'success',
+                'Time In recorded on a rest day. Not an approved extra shift.'
+            );
         }
 
-        return back()->with('success', 'Time In recorded. Late minutes: ' . $lateMinutes);
+        return back()->with(
+            'success',
+            'Time In recorded. Late minutes: ' . $lateMinutes
+        );
     }
 
     private function recordTimeOut(User $user)
@@ -77,7 +97,9 @@ class AttendanceController extends Controller
         $overtimeStatus = 'Not Requested';
 
         if ($isWorkDay && $user->regular_time_out) {
-            $scheduledTimeOut = Carbon::parse($attendanceDate->toDateString() . ' ' . $user->regular_time_out);
+            $scheduledTimeOut = Carbon::parse(
+                $attendanceDate->toDateString() . ' ' . $user->regular_time_out
+            );
 
             if ($scheduledTimeOut->lessThan($attendance->time_in)) {
                 $scheduledTimeOut->addDay();
@@ -103,7 +125,10 @@ class AttendanceController extends Controller
             return back()->with('success', 'Time Out recorded on a rest day.');
         }
 
-        return back()->with('success', "Time Out recorded. Undertime: {$undertimeMinutes}m. Overtime: {$overtimeMinutes}m.");
+        return back()->with(
+            'success',
+            "Time Out recorded. Undertime: {$undertimeMinutes}m. Overtime: {$overtimeMinutes}m."
+        );
     }
 
     public function timeIn(Request $request)
@@ -116,24 +141,32 @@ class AttendanceController extends Controller
         return $this->recordTimeOut($request->user());
     }
 
+    /**
+     * PUBLIC QR SCANNING METHODS
+     * Tinanggal natin ang authorizeEmployeeAccess() para maging public 
+     * at walang 403 Unauthorized error.
+     */
+    
     public function scan($employee)
     {
         $user = User::findOrFail($employee);
-        abort_unless(auth()->user()->role === 'admin' || auth()->id() === $user->id, 403, 'Unauthorized access.');
-        return view('employee.attendance-scan', ['employee' => $user]);
+
+        return view('employee.attendance-scan', [
+            'employee' => $user,
+        ]);
     }
 
     public function qrTimeIn($employee)
     {
         $user = User::findOrFail($employee);
-        abort_unless(auth()->user()->role === 'admin' || auth()->id() === $user->id, 403, 'Unauthorized access.');
+
         return $this->recordTimeIn($user);
     }
 
     public function qrTimeOut($employee)
     {
         $user = User::findOrFail($employee);
-        abort_unless(auth()->user()->role === 'admin' || auth()->id() === $user->id, 403, 'Unauthorized access.');
+
         return $this->recordTimeOut($user);
     }
 
@@ -141,52 +174,60 @@ class AttendanceController extends Controller
     {
         $user = $request->user();
         $month = (int) $request->query('month', now()->month);
-        $year  = (int) $request->query('year', now()->year);
+        $year = (int) $request->query('year', now()->year);
 
-        if ($month < 1 || $month > 12) $month = now()->month;
-        if ($year < 2000 || $year > 2100) $year = now()->year;
+        if ($month < 1 || $month > 12) {
+            $month = now()->month;
+        }
+
+        if ($year < 2000 || $year > 2100) {
+            $year = now()->year;
+        }
 
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
-        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $records = Attendance::where('user_id', $user->id)
-            ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->whereBetween('date', [
+                $startOfMonth->toDateString(),
+                $endOfMonth->toDateString(),
+            ])
             ->orderBy('date', 'desc')
             ->get();
 
-        $daysPresent    = $records->whereNotNull('time_in')->count();
-        $daysCompleted  = $records->whereNotNull('time_out')->count();
-        $totalLate      = (int) $records->sum('late_minutes');
+        $daysPresent = $records->whereNotNull('time_in')->count();
+        $daysCompleted = $records->whereNotNull('time_out')->count();
+        $totalLate = (int) $records->sum('late_minutes');
         $totalUndertime = (int) $records->sum('undertime_minutes');
-        $totalOvertime  = (int) $records->sum('overtime_minutes');
+        $totalOvertime = (int) $records->sum('overtime_minutes');
 
-        // === FIXED: Bawas ang unpaid_break_minutes sa worked hours ===
-        // Ang break ay binabawas lang sa mga araw na nag-time in AT time out
-        // at kung scheduled work day siya (kasi rest day = no break)
         $unpaidBreakMinutes = (int) ($user->unpaid_break_minutes ?? 0);
 
         $totalWorkedMinutes = $records
-            ->filter(fn ($r) => $r->time_in && $r->time_out)
-            ->sum(function ($r) use ($user, $unpaidBreakMinutes) {
-                $workedMinutes = Carbon::parse($r->time_in)->diffInMinutes(Carbon::parse($r->time_out));
+            ->filter(fn ($record) => $record->time_in && $record->time_out)
+            ->sum(function ($record) use ($user, $unpaidBreakMinutes) {
+                $workedMinutes = Carbon::parse($record->time_in)
+                    ->diffInMinutes(Carbon::parse($record->time_out));
 
-                // Bawas break lang kung work day ang araw na yun
-                $isWorkDay = $this->isScheduledWorkDay($user, Carbon::parse($r->date));
+                $isWorkDay = $this->isScheduledWorkDay(
+                    $user,
+                    Carbon::parse($record->date)
+                );
+
                 if ($isWorkDay) {
                     $workedMinutes -= $unpaidBreakMinutes;
                 }
 
-                return max(0, $workedMinutes); // huwag pabayaan maging negative
+                return max(0, $workedMinutes);
             });
-        // ============================================================
 
         $summary = [
-            'days_present'      => $daysPresent,
-            'days_completed'    => $daysCompleted,
-            'late_minutes'      => $totalLate,
+            'days_present' => $daysPresent,
+            'days_completed' => $daysCompleted,
+            'late_minutes' => $totalLate,
             'undertime_minutes' => $totalUndertime,
-            'overtime_minutes'  => $totalOvertime,
-            'worked_hours'      => round($totalWorkedMinutes / 60, 2),
+            'overtime_minutes' => $totalOvertime,
+            'worked_hours' => round($totalWorkedMinutes / 60, 2),
         ];
 
         $correctionRequests = AttendanceCorrection::where('user_id', $user->id)
@@ -218,7 +259,10 @@ class AttendanceController extends Controller
             ->first();
 
         if ($existing && $existing->time_in && $existing->time_out) {
-            return back()->with('error', 'You already have a complete attendance record for this date.');
+            return back()->with(
+                'error',
+                'You already have a complete attendance record for this date.'
+            );
         }
 
         $correction = AttendanceCorrection::create([
@@ -229,44 +273,54 @@ class AttendanceController extends Controller
             'reason' => $validated['reason'],
         ]);
 
-        // Send real-time notification to all admins
         User::where('role', 'admin')->get()->each(function ($admin) use ($correction) {
             $admin->notify(new AttendanceCorrectionNotification($correction));
         });
 
-        return back()->with('success', 'Correction request submitted. Please wait for admin approval.');
+        return back()->with(
+            'success',
+            'Correction request submitted. Please wait for admin approval.'
+        );
     }
 
     public function downloadMyCsv(Request $request)
     {
         $user = $request->user();
         $month = (int) $request->query('month', now()->month);
-        $year  = (int) $request->query('year', now()->year);
+        $year = (int) $request->query('year', now()->year);
 
-        if ($month < 1 || $month > 12) $month = now()->month;
-        if ($year < 2000 || $year > 2100) $year = now()->year;
+        if ($month < 1 || $month > 12) {
+            $month = now()->month;
+        }
+
+        if ($year < 2000 || $year > 2100) {
+            $year = now()->year;
+        }
 
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
-        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $records = Attendance::where('user_id', $user->id)
-            ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->whereBetween('date', [
+                $startOfMonth->toDateString(),
+                $endOfMonth->toDateString(),
+            ])
             ->orderBy('date', 'asc')
             ->get();
 
         $filename = 'My_Attendance_' . $startOfMonth->format('F_Y') . '.csv';
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$filename}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $unpaidBreakMinutes = (int) ($user->unpaid_break_minutes ?? 0);
 
-        $callback = function() use ($records, $user, $unpaidBreakMinutes) {
+        $callback = function () use ($records, $user, $unpaidBreakMinutes) {
             $file = fopen('php://output', 'w');
 
             fputcsv($file, [
@@ -277,16 +331,21 @@ class AttendanceController extends Controller
                 'Undertime (min)',
                 'Overtime (min)',
                 'Worked Hours',
-                'Status'
+                'Status',
             ]);
 
-            foreach ($records as $r) {
-                // === FIXED: Compute worked hours with break deduction ===
+            foreach ($records as $record) {
                 $workedHours = '—';
-                if ($r->time_in && $r->time_out) {
-                    $workedMinutes = Carbon::parse($r->time_in)->diffInMinutes(Carbon::parse($r->time_out));
 
-                    $isWorkDay = $this->isScheduledWorkDay($user, Carbon::parse($r->date));
+                if ($record->time_in && $record->time_out) {
+                    $workedMinutes = Carbon::parse($record->time_in)
+                        ->diffInMinutes(Carbon::parse($record->time_out));
+
+                    $isWorkDay = $this->isScheduledWorkDay(
+                        $user,
+                        Carbon::parse($record->date)
+                    );
+
                     if ($isWorkDay) {
                         $workedMinutes -= $unpaidBreakMinutes;
                     }
@@ -294,17 +353,20 @@ class AttendanceController extends Controller
                     $workedMinutes = max(0, $workedMinutes);
                     $workedHours = round($workedMinutes / 60, 2);
                 }
-                // =====================================================
 
                 fputcsv($file, [
-                    Carbon::parse($r->date)->format('M d, Y'),
-                    $r->time_in ? Carbon::parse($r->time_in)->format('h:i A') : '—',
-                    $r->time_out ? Carbon::parse($r->time_out)->format('h:i A') : '—',
-                    $r->late_minutes ?? 0,
-                    $r->undertime_minutes ?? 0,
-                    $r->overtime_minutes ?? 0,
+                    Carbon::parse($record->date)->format('M d, Y'),
+                    $record->time_in
+                        ? Carbon::parse($record->time_in)->format('h:i A')
+                        : '—',
+                    $record->time_out
+                        ? Carbon::parse($record->time_out)->format('h:i A')
+                        : '—',
+                    $record->late_minutes ?? 0,
+                    $record->undertime_minutes ?? 0,
+                    $record->overtime_minutes ?? 0,
                     $workedHours,
-                    $r->status
+                    $record->status,
                 ]);
             }
 

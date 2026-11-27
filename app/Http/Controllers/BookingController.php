@@ -68,6 +68,11 @@ class BookingController extends Controller
             ->whereIn('applies_to', ['child', 'all'])
             ->sum('amount');
 
+        // Check kung may active promos
+        $hasActivePromos = \App\Models\Promotion::where('is_active', true)
+            ->where('valid_until', '>=', now()->toDateString())
+            ->exists();
+
         return view('booking', compact(
             'accommodations',
             'selectedAccommodations',
@@ -79,7 +84,8 @@ class BookingController extends Controller
             'entranceAdultFee',
             'entranceChildFee',
             'swimmingAdultFee',
-            'swimmingChildFee'
+            'swimmingChildFee',
+            'hasActivePromos' // <-- Idinagdag ito
         ));
     }
 

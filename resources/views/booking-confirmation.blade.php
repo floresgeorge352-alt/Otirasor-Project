@@ -5,311 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Booking Submitted - Otirasor Beach and Resort</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #0077b6; --primary-dark: #023e8a; --secondary: #00b4d8; --light-blue: #eaf8fc; --white: #ffffff; --text: #243746; --muted: #6c7a86; --border: #dce8ed; --success: #168a52; --success-light: #e9f8f0; --warning: #9a6a00; --warning-light: #fff8e6; }
-        body { font-family: Arial, Helvetica, sans-serif; background: linear-gradient(180deg, #eaf9fd 0%, #f4fbfd 40%, #f7fbfc 100%); color: var(--text); min-height: 100vh; }
-        nav { width: 100%; min-height: 78px; background: linear-gradient(135deg, #0077b6, #0096c7, #00b4d8); padding: 10px 6%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px rgba(0, 119, 182, 0.20); }
-        .brand { display: flex; align-items: center; gap: 12px; }
-        .brand-logo { width: 62px; height: 62px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border-radius: 50%; }
-        .brand-logo img { width: 62px; height: 62px; display: block; object-fit: contain; border: 0; outline: 0; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.25)); }
-        .brand-text { color: #ffffff; }
-        .brand-title { font-size: 18px; font-weight: 700; line-height: 1.2; }
-        .brand-subtitle { font-size: 11px; opacity: 0.9; margin-top: 4px; }
-        .nav-links { display: flex; align-items: center; gap: 7px; }
-        .nav-links a { color: #ffffff; text-decoration: none; padding: 10px 14px; border-radius: 9px; font-size: 14px; font-weight: 600; transition: 0.2s ease; }
-        .nav-links a:hover { background: rgba(255,255,255,0.18); }
-        .container { width: 92%; max-width: 850px; margin: 45px auto 55px; }
-        .confirmation-box { background: var(--white); border: 1px solid var(--border); border-radius: 22px; padding: 35px; box-shadow: 0 10px 35px rgba(25, 72, 88, 0.08); }
-        .success-area { text-align: center; padding: 10px 10px 30px; }
-        .success-icon { width: 78px; height: 78px; margin: 0 auto 18px; border-radius: 50%; background: var(--success-light); border: 2px solid #b9e6cc; color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 43px; font-weight: bold; }
-        .success-badge { display: inline-block; background: var(--success-light); color: var(--success); padding: 7px 14px; border-radius: 30px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
-        h1 { color: var(--primary-dark); font-size: 30px; margin-bottom: 10px; }
-        .message { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 600px; margin: auto; }
-        .booking-id { margin: 0 0 25px; padding: 17px; background: var(--light-blue); border: 1px solid #c8e9f1; border-radius: 13px; text-align: center; }
-        .booking-id-label { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-bottom: 5px; }
-        .booking-id-number { color: var(--primary-dark); font-size: 22px; font-weight: 800; }
-        .details-card { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: #ffffff; }
-        .details-header { padding: 19px 21px; background: linear-gradient(135deg, #f0fbfd, #ffffff); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-        .details-icon { width: 42px; height: 42px; border-radius: 11px; background: var(--light-blue); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 19px; }
-        .details-header h2 { color: var(--primary-dark); font-size: 19px; }
-        .details-header p { color: var(--muted); font-size: 12px; margin-top: 3px; }
-        .details-body { padding: 20px; }
-        .detail { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 13px 0; border-bottom: 1px solid #edf2f4; line-height: 1.5; }
-        .detail:last-child { border-bottom: none; }
-        .detail-label { color: var(--muted); font-size: 13px; font-weight: 600; min-width: 150px; }
-        .detail-value { color: var(--text); font-size: 14px; font-weight: 700; text-align: right; }
-        .total-detail { margin-top: 10px; padding: 17px; background: var(--light-blue); border: 1px solid #c8e9f1; border-radius: 13px; }
-        .total-detail .detail-label { color: var(--primary-dark); font-size: 15px; font-weight: 800; }
-        .total-detail .detail-value { color: var(--primary-dark); font-size: 20px; font-weight: 900; }
-        .facility-detail { background: #f8fcfd; border: 1px solid #dce8ed; border-radius: 13px; padding: 15px; margin-top: 10px; }
-        .facility-detail .detail { border-bottom: 1px solid #edf2f4; }
-        .facility-detail .detail:last-child { border-bottom: none; }
-        .facility-title { color: var(--primary-dark); font-size: 15px; font-weight: 800; margin-bottom: 8px; }
-        .facility-subtitle { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
-        .facility-breakdown { margin-top: 8px; }
-        .facility-breakdown .detail { padding: 9px 0; }
-        .facility-total-row { margin-top: 8px; padding-top: 12px; border-top: 2px solid #dce8ed; }
-        .facility-total-row .detail-label, .facility-total-row .detail-value { color: var(--primary-dark); font-weight: 900; }
-        .pool-selected { color: var(--success); font-weight: 800; }
-        .pool-not-selected { color: var(--muted); font-weight: 700; }
-        
-        /* GRAND TOTAL */
-        .grand-total { margin-top: 15px; padding: 20px; background: linear-gradient(135deg, #0077b6, #00a4cc); border-radius: 14px; color: #ffffff; }
-        .grand-total-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 8px; }
-        .grand-total-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.4); }
-        .grand-total-label { font-size: 15px; font-weight: 600; }
-        .grand-total-value { font-size: 18px; font-weight: 700; }
-        .grand-total-row.final .grand-total-label { font-size: 18px; font-weight: 800; }
-        .grand-total-row.final .grand-total-value { font-size: 26px; font-weight: 900; }
-
-        .guest-summary { margin: 15px 0; padding: 17px; background: #f8fcfd; border: 1px solid var(--border); border-radius: 13px; }
-        .guest-title { color: var(--primary-dark); font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-        .guest-row { display: flex; justify-content: space-between; padding: 6px 0; color: var(--muted); font-size: 13px; }
-        .guest-row strong { color: var(--text); }
-        .guest-total { border-top: 1px solid #dce8ed; margin-top: 7px; padding-top: 10px; color: var(--primary); font-weight: 800; font-size: 14px; }
-        .status { display: inline-block; padding: 7px 14px; background: var(--warning-light); color: var(--warning); border: 1px solid #f0d58a; border-radius: 30px; font-size: 12px; font-weight: 800; }
-        .notice { margin-top: 20px; padding: 17px 18px; background: var(--warning-light); border: 1px solid #f0d58a; border-left: 5px solid #e0a900; border-radius: 12px; color: #725600; font-size: 13px; line-height: 1.7; }
-        .notice strong { color: #5f4800; }
-        .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
-        .btn { display: flex; justify-content: center; align-items: center; min-height: 50px; padding: 12px 18px; background: linear-gradient(135deg, #0077b6, #00a4cc); color: #ffffff; text-decoration: none; border-radius: 11px; font-size: 14px; font-weight: 700; transition: 0.2s ease; box-shadow: 0 7px 17px rgba(0,119,182,0.16); }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,119,182,0.22); }
-        .secondary-btn { background: #f1f5f7; color: #52636d; box-shadow: none; border: 1px solid var(--border); }
-        .secondary-btn:hover { background: #e5ecef; color: #263b45; box-shadow: none; }
-        footer { text-align: center; color: #84939b; font-size: 12px; padding: 5px 20px 35px; }
-        @media (max-width: 700px) {
-            nav { min-height: auto; padding: 12px 5%; flex-direction: column; gap: 10px; }
-            .brand { width: 100%; justify-content: flex-start; }
-            .brand-logo { width: 54px; height: 54px; }
-            .brand-logo img { width: 54px; height: 54px; }
-            .brand-title { font-size: 16px; }
-            .brand-subtitle { font-size: 10px; }
-            .nav-links { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
-            .nav-links a { padding: 8px 11px; font-size: 12px; }
-            .container { width: 94%; margin-top: 28px; }
-            .confirmation-box { padding: 22px 18px; border-radius: 17px; }
-            h1 { font-size: 25px; }
-            .success-icon { width: 68px; height: 68px; font-size: 36px; }
-            .detail { flex-direction: column; gap: 4px; }
-            .detail-value { text-align: left; }
-            .total-detail .detail-value { font-size: 18px; }
-            .grand-total-row.final .grand-total-value { font-size: 22px; }
-            .buttons { grid-template-columns: 1fr; }
+        :root {
+            --primary: #0077b6; --primary-dark: #023e8a; --primary-light: #00b4d8;
+            --bg: #f5f8fc; --text: #243b4a; --muted: #6c7a86; --border: #dce8ed;
+            --white: #fff; --shadow: 0 10px 30px rgba(0, 0, 0, 0.05); --radius: 20px;
         }
-        @media (max-width: 420px) {
-            .brand-logo { width: 50px; height: 50px; }
-            .brand-logo img { width: 50px; height: 50px; }
-            .brand-title { font-size: 15px; }
-            .brand-subtitle { font-size: 9px; }
-            .details-body { padding: 16px; }
-            .booking-id-number { font-size: 20px; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+
+        nav {
+            background: rgba(0, 119, 182, 0.95); backdrop-filter: blur(10px);
+            padding: 15px 6%; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; font-weight: 800; }
+        .nav-brand img { width: 45px; height: 45px; object-fit: contain; border-radius: 50%; background: white; padding: 2px; }
+        nav .nav-links { display: flex; align-items: center; gap: 20px; }
+        nav a { color: white; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
+        nav a:hover { color: #dff8ff; transform: translateY(-2px); }
+
+        .container { width: 800px; max-width: 92%; margin: 40px auto; }
+
+        .confirmation-card {
+            background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 40px; box-shadow: var(--shadow); text-align: center; margin-bottom: 25px;
+        }
+        .success-icon {
+            width: 80px; height: 80px; background: #e6f7ef; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+            margin: 0 auto 20px; border: 3px solid #147a4b; color: #147a4b;
+        }
+        .confirmation-card h1 { color: var(--primary-dark); font-size: 28px; margin-bottom: 10px; }
+        .confirmation-card p { color: var(--muted); font-size: 14px; }
+        .booking-ref { font-weight: 700; color: var(--primary); font-size: 16px; margin-top: 10px; }
+
+        .details-card {
+            background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 30px; box-shadow: var(--shadow); margin-bottom: 25px;
+        }
+        .details-card h2 {
+            color: var(--primary-dark); font-size: 18px; margin-bottom: 15px;
+            border-bottom: 1px solid #edf1f5; padding-bottom: 15px;
+        }
+        .detail-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px dashed #edf1f5; font-size: 14px;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--muted); }
+        .detail-value { font-weight: 600; color: var(--text); }
+
+        /* UNIFIED SUMMARY TABLE */
+        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .summary-table th {
+            text-align: left; padding: 10px 0; color: var(--primary-dark); font-size: 13px;
+            text-transform: uppercase; border-bottom: 2px solid var(--primary);
+        }
+        .summary-table td { padding: 12px 0; border-bottom: 1px dashed #edf1f5; font-size: 14px; color: var(--text); }
+        .summary-table td:last-child { text-align: right; font-weight: 600; }
+        .summary-table .subtotal-row td {
+            background: #f8fbfd; font-weight: 700; color: var(--primary-dark);
+            padding: 15px 10px; border-bottom: none;
+        }
+        .grand-total-box {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white; padding: 20px 25px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 20px; box-shadow: 0 5px 15px rgba(0, 119, 182, 0.3);
+        }
+        .grand-total-box span:first-child { font-size: 18px; font-weight: 800; font-family: 'Montserrat', sans-serif; }
+        .grand-total-box span:last-child { font-size: 28px; font-weight: 800; font-family: 'Montserrat', sans-serif; }
+
+        .action-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .btn {
+            padding: 14px 30px; border: 0; border-radius: 10px; font: 700 14px 'Poppins', sans-serif;
+            cursor: pointer; text-decoration: none; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(0, 119, 182, 0.3); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .btn-secondary { background: #edf1f5; color: var(--primary-dark); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #dce8ed; transform: translateY(-2px); }
+
+        footer { text-align: center; padding: 25px; background: var(--primary-dark); color: rgba(255, 255, 255, 0.8); font-size: 13px; margin-top: 40px; }
+
+        @media (max-width: 600px) {
+            nav { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            .confirmation-card { padding: 30px 20px; }
+            .details-card { padding: 20px; }
+            .grand-total-box span:last-child { font-size: 22px; }
+            .action-buttons { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
-
 <body>
 
+<!-- NAVIGATION -->
 <nav>
-    <div class="brand">
-        <div class="brand-logo">
-            <img src="{{ asset('images/otirasor-logo.png') }}?v={{ filemtime(public_path('images/otirasor-logo.png')) }}" alt="Otirasor Beach and Resort Logo">
-        </div>
-        <div class="brand-text">
-            <div class="brand-title">Otirasor Beach and Resort</div>
-            <div class="brand-subtitle">Relax • Enjoy • Create Memories</div>
-        </div>
+    <div class="nav-brand">
+        <img src="{{ asset('images/otirasor-logo.png') }}" alt="Logo">
+        Otirasor Beach and Resort
     </div>
-
     <div class="nav-links">
         <a href="/">Home</a>
-        <a href="/accommodations">Book Now</a>
+        <a href="/dashboard">Dashboard</a>
         <a href="/my-bookings">My Bookings</a>
     </div>
 </nav>
 
-
+<!-- MAIN CONTENT -->
 <div class="container">
-    <div class="confirmation-box">
 
-        <div class="success-area">
-            <div class="success-icon">✓</div>
-            <div class="success-badge">✓ BOOKING SUBMITTED</div>
-            <h1>Booking Submitted Successfully!</h1>
-            <p class="message">Your reservation has been submitted and is now waiting for manager approval.</p>
-        </div>
+    <!-- SUCCESS HEADER -->
+    <div class="confirmation-card">
+        <div class="success-icon">✅</div>
+        <h1>Booking Submitted Successfully!</h1>
+        <p>Thank you for choosing Otirasor Beach and Resort. Your booking is now pending for admin approval.</p>
+        <div class="booking-ref">Booking Reference #{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }}</div>
+    </div>
 
-        <div class="booking-id">
-            <span class="booking-id-label">Booking ID</span>
-            <div class="booking-id-number">#{{ $booking->id }}</div>
-        </div>
-
-        <div class="details-card">
-            <div class="details-header">
-                <div class="details-icon">📋</div>
-                <div>
-                    <h2>Booking Details</h2>
-                    <p>Summary of your submitted reservation</p>
-                </div>
-            </div>
-
-            <div class="details-body">
-
-                <div class="detail">
-                    <div class="detail-label">Guest Name</div>
-                    <div class="detail-value">{{ $booking->guest_name }}</div>
-                </div>
-
-                <div class="detail">
-                    <div class="detail-label">Contact Number</div>
-                    <div class="detail-value">{{ $booking->contact_number }}</div>
-                </div>
-
-                <div class="guest-summary">
-                    <div class="guest-title">👥 Guest Information</div>
-                    <div class="guest-row"><span>Adults</span><strong>{{ $booking->number_of_adults }}</strong></div>
-                    <div class="guest-row"><span>Kids</span><strong>{{ $booking->number_of_kids }}</strong></div>
-                    <div class="guest-row guest-total"><span>Total Guests</span><strong>{{ $booking->number_of_guests }}</strong></div>
-                </div>
-
-                <div class="detail">
-                    <div class="detail-label">Accommodation</div>
-                    <div class="detail-value">
-                        {{-- FIX: gamitin ang $accommodationBreakdown galing sa controller
-                             (iwas sa conflict ng column na "accommodations" at ng relationship) --}}
-                        @if(!empty($accommodationBreakdown))
-                            {{ collect($accommodationBreakdown)->pluck('name')->join(', ') }}
-                        @else
-                            N/A (Old Booking)
-                        @endif
-                    </div>
-                </div>
-
-                <div class="detail total-detail">
-                    <div class="detail-label">Accommodation Total</div>
-                    <div class="detail-value">₱{{ number_format($booking->accommodation_total, 2) }}</div>
-                </div>
-
-                <div class="facility-detail">
-                    <div class="facility-title">🏖️ Beach & Swimming Pool</div>
-                    <div class="facility-subtitle">Entrance is automatically charged for all guests. Swimming pool use is optional.</div>
-
-                    <div class="facility-breakdown">
-                        <div class="detail">
-                            <div class="detail-label">🏖️ Beach Entrance - Adults</div>
-                            <div class="detail-value">{{ $booking->number_of_adults }} × ₱20 = ₱{{ number_format($booking->number_of_adults * 20, 2) }}</div>
-                        </div>
-
-                        <div class="detail">
-                            <div class="detail-label">🏖️ Beach Entrance - Kids</div>
-                            <div class="detail-value">{{ $booking->number_of_kids }} × ₱10 = ₱{{ number_format($booking->number_of_kids * 10, 2) }}</div>
-                        </div>
-
-                        <div class="detail">
-                            <div class="detail-label">Beach Entrance Total</div>
-                            <div class="detail-value">₱{{ number_format(($booking->number_of_adults * 20) + ($booking->number_of_kids * 10), 2) }}</div>
-                        </div>
-                    </div>
-
-                    @if(($booking->pool_adults ?? 0) > 0 || ($booking->pool_kids ?? 0) > 0)
-                        <div class="facility-breakdown">
-                            <div class="detail">
-                                <div class="detail-label">🏊 Swimming Pool</div>
-                                <div class="detail-value pool-selected">Selected</div>
-                            </div>
-                            <div class="detail">
-                                <div class="detail-label">Pool - Adults</div>
-                                <div class="detail-value">{{ $booking->pool_adults ?? 0 }} × ₱70 = ₱{{ number_format(($booking->pool_adults ?? 0) * 70, 2) }}</div>
-                            </div>
-                            <div class="detail">
-                                <div class="detail-label">Pool - Kids</div>
-                                <div class="detail-value">{{ $booking->pool_kids ?? 0 }} × ₱50 = ₱{{ number_format(($booking->pool_kids ?? 0) * 50, 2) }}</div>
-                            </div>
-                            <div class="detail">
-                                <div class="detail-label">Swimming Pool Total</div>
-                                <div class="detail-value">₱{{ number_format((($booking->pool_adults ?? 0) * 70) + (($booking->pool_kids ?? 0) * 50), 2) }}</div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="detail">
-                            <div class="detail-label">🏊 Swimming Pool</div>
-                            <div class="detail-value pool-not-selected">Not Selected</div>
-                        </div>
-                    @endif
-
-                    <div class="detail facility-total-row">
-                        <div class="detail-label">Facility Total</div>
-                        <div class="detail-value">₱{{ number_format($booking->facility_total ?? 0, 2) }}</div>
-                    </div>
-                </div>
-
-                <!-- GRAND TOTAL with DISCOUNT -->
-                <div class="grand-total">
-                    @if($booking->discount_amount > 0)
-                        <div class="grand-total-row">
-                            <div class="grand-total-label">Subtotal</div>
-                            <div class="grand-total-value">₱{{ number_format(($booking->accommodation_total ?? 0) + ($booking->facility_total ?? 0), 2) }}</div>
-                        </div>
-                        <div class="grand-total-row">
-                            <div class="grand-total-label">Promo Discount ({{ $booking->promo_code }})</div>
-                            <div class="grand-total-value" style="color: #fbbf24;">-₱{{ number_format($booking->discount_amount, 2) }}</div>
-                        </div>
-                        <div class="grand-total-row final">
-                            <div class="grand-total-label">Grand Total</div>
-                            <div class="grand-total-value">₱{{ number_format($grandTotal, 2) }}</div>
-                        </div>
-                    @else
-                        <div class="grand-total-row final" style="border-top: none; padding-top: 0;">
-                            <div class="grand-total-label">Grand Total</div>
-                            <div class="grand-total-value">₱{{ number_format($grandTotal, 2) }}</div>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="detail">
-                    <div class="detail-label">Check-in</div>
-                    <div class="detail-value">{{ $booking->check_in }}</div>
-                </div>
-
-                <div class="detail">
-                    <div class="detail-label">Check-out</div>
-                    <div class="detail-value">{{ $booking->check_out }}</div>
-                </div>
-
-                <div class="detail">
-                    <div class="detail-label">Payment Method</div>
-                    <div class="detail-value">{{ $booking->payment_method }}</div>
-                </div>
-
-                @if($booking->payment_method === 'GCash')
-                    <div class="detail">
-                        <div class="detail-label">GCash Reference</div>
-                        <div class="detail-value">{{ $booking->gcash_reference }}</div>
-                    </div>
+    <!-- UNIFIED SUMMARY CARD -->
+    <div class="details-card">
+        <h2>📝 Booking Summary</h2>
+        
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Accommodation(s) -->
+                @if(count($accommodationBreakdown) > 0)
+                    @foreach($accommodationBreakdown as $acc)
+                        <tr>
+                            <td>🏠 {{ $acc['name'] }}</td>
+                            <td>₱{{ number_format($acc['price'], 2) }}</td>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td>🏠 Accommodation</td>
+                        <td>₱{{ number_format($booking->accommodation_total, 2) }}</td>
+                    </tr>
                 @endif
 
-                <div class="detail">
-                    <div class="detail-label">Booking Status</div>
-                    <div class="detail-value"><span class="status">{{ $booking->status }}</span></div>
-                </div>
+                <!-- Fees (Beach & Pool) -->
+                @if($beachEntranceTotal > 0)
+                    <tr>
+                        <td>🌊 Beach Entrance ({{ $booking->number_of_adults }} Adults, {{ $booking->number_of_kids }} Kids)</td>
+                        <td>₱{{ number_format($beachEntranceTotal, 2) }}</td>
+                    </tr>
+                @endif
 
-            </div>
+                @if($poolTotal > 0)
+                    <tr>
+                        <td>🏊 Swimming Pool ({{ $booking->pool_adults }} Adults, {{ $booking->pool_kids }} Kids)</td>
+                        <td>₱{{ number_format($poolTotal, 2) }}</td>
+                    </tr>
+                @endif
+
+                <!-- Subtotal before discounts -->
+                @php
+                    $subtotal = $booking->accommodation_total + $booking->facility_total;
+                @endphp
+                <tr class="subtotal-row">
+                    <td>Subtotal</td>
+                    <td>₱{{ number_format($subtotal, 2) }}</td>
+                </tr>
+
+                <!-- Discounts -->
+                @if($booking->discount_amount > 0)
+                    <tr style="color: #e63946;">
+                        <td>🎟️ Promo Code ({{ $booking->promo_code }})</td>
+                        <td>- ₱{{ number_format($booking->discount_amount, 2) }}</td>
+                    </tr>
+                @endif
+
+                @if($booking->reward_discount > 0)
+                    <tr style="color: #e63946;">
+                        <td>⭐ Reward Points Discount</td>
+                        <td>- ₱{{ number_format($booking->reward_discount, 2) }}</td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+
+        <!-- GRAND TOTAL -->
+        <div class="grand-total-box">
+            <span>Grand Total</span>
+            <span>₱{{ number_format($grandTotal, 2) }}</span>
         </div>
-
-        <div class="notice">
-            <strong>⏳ Waiting for Manager Approval</strong><br>
-            Your booking is not yet confirmed. Please wait for the manager to review and approve your reservation.
-        </div>
-
-        <div class="buttons">
-            <a href="/my-bookings" class="btn">📋 View My Bookings</a>
-            <a href="/accommodations" class="btn secondary-btn">+ Make Another Booking</a>
-        </div>
-
     </div>
+
+    <!-- BOOKING DETAILS CARD -->
+    <div class="details-card">
+        <h2>📅 Stay Details</h2>
+        
+        <div class="detail-row">
+            <span class="detail-label">Guest Name</span>
+            <span class="detail-value">{{ $booking->guest_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Contact Number</span>
+            <span class="detail-value">{{ $booking->contact_number }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Check-in Date</span>
+            <span class="detail-value">{{ \Carbon\Carbon::parse($booking->check_in)->format('F d, Y') }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Check-out Date</span>
+            <span class="detail-value">{{ \Carbon\Carbon::parse($booking->check_out)->format('F d, Y') }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Total Guests</span>
+            <span class="detail-value">{{ $booking->number_of_adults }} Adults, {{ $booking->number_of_kids }} Kids</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Payment Method</span>
+            <span class="detail-value">{{ $booking->payment_method }}</span>
+        </div>
+        @if($booking->gcash_reference)
+            <div class="detail-row">
+                <span class="detail-label">GCash Reference</span>
+                <span class="detail-value">{{ $booking->gcash_reference }}</span>
+            </div>
+        @endif
+        <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+                @if($booking->status === 'Pending')
+                    <span style="color: #a36a00; background: #fff4d8; padding: 4px 10px; border-radius: 20px; font-size: 12px;">Pending</span>
+                @elseif($booking->status === 'Confirmed')
+                    <span style="color: #147a4b; background: #e6f7ef; padding: 4px 10px; border-radius: 20px; font-size: 12px;">Confirmed</span>
+                @else
+                    <span style="color: #b52d43; background: #ffe8ec; padding: 4px 10px; border-radius: 20px; font-size: 12px;">{{ $booking->status }}</span>
+                @endif
+            </span>
+        </div>
+    </div>
+
+    <!-- NOTICE -->
+    <div style="background: #fff8e6; border: 1px solid #f0d58a; border-left: 5px solid #e0a900; border-radius: 12px; padding: 17px 18px; color: #725600; font-size: 13px; line-height: 1.7; margin-bottom: 25px;">
+        <strong>⏳ Waiting for Manager Approval</strong><br>
+        Your booking is not yet confirmed. Please wait for the manager to review and approve your reservation.
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+        <a href="{{ route('dashboard') }}" class="btn btn-secondary">🏠 Back to Dashboard</a>
+        <a href="/my-bookings" class="btn btn-primary">📋 View My Bookings</a>
+    </div>
+
 </div>
 
+<!-- FOOTER -->
 <footer>
-    <p>© {{ date('Y') }} Otirasor Beach and Resort • Reservation System</p>
+    &copy; {{ date('Y') }} Otirasor Beach and Resort. All Rights Reserved.
 </footer>
 
 </body>

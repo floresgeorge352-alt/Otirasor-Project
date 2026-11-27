@@ -44,9 +44,6 @@
         .selected-item:last-child { margin-bottom: 0; }
         .selected-item-name { color: var(--primary-dark); font-size: 15px; font-weight: 600; }
         .selected-item-price { color: var(--dark); font-size: 16px; font-weight: 800; white-space: nowrap; }
-        .accommodation-total-preview { margin-top: 20px; padding: 18px 20px; background: #eaf8fc; border: 1px solid #b9e1eb; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-        .accommodation-total-preview span { color: var(--dark); font-size: 15px; font-weight: 700; }
-        .accommodation-total-preview strong { color: var(--primary); font-size: 22px; font-weight: 800; white-space: nowrap; }
         .empty { text-align: center; padding: 20px; color: var(--muted); background: white; border-radius: 10px; font-size: 14px; }
         .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .date-item { background: #f8fcfd; border: 1px solid var(--border); padding: 20px; border-radius: 15px; }
@@ -94,12 +91,26 @@
         .pool-summary-row span:first-child { color: var(--muted); font-size: 14px; }
         .pool-summary-row strong { color: var(--dark); font-size: 15px; }
         .pool-total-row strong { color: var(--primary); font-size: 20px; }
-        .facility-total-preview { margin-top: 20px; padding: 18px; background: var(--success-bg); border: 1px solid #b7dfc3; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-        .facility-total-preview span { color: #1b5e20; font-weight: 700; font-size: 15px; }
-        .facility-total-preview strong { color: var(--success); font-size: 22px; }
-        .grand-total-preview { grid-column: 1 / -1; margin-top: 5px; padding: 25px; background: linear-gradient(135deg, #e9f8f0, #f4fff8); border: 2px solid #2e7d32; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 15px; box-shadow: 0 8px 25px rgba(46, 125, 50, 0.1); }
-        .grand-total-preview span { color: #155c37; font-size: 18px; font-weight: 800; font-family: 'Montserrat', sans-serif; }
-        .grand-total-preview strong { color: #2e7d32; font-size: 32px; font-weight: 900; white-space: nowrap; }
+        
+        /* NEW SUMMARY TABLE */
+        .summary-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            margin-bottom: 20px; 
+            table-layout: fixed; 
+            word-wrap: break-word; 
+        }
+        .summary-table th { text-align: left; padding: 10px 0; color: var(--primary-dark); font-size: 13px; text-transform: uppercase; border-bottom: 2px solid var(--primary); }
+        .summary-table td { padding: 12px 0; border-bottom: 1px dashed #edf1f5; font-size: 14px; color: var(--text); }
+        .summary-table td:last-child { text-align: right; font-weight: 600; }
+        .summary-table .subtotal-row td { background: #f8fbfd; font-weight: 700; color: var(--primary-dark); padding: 15px 10px; border-bottom: none; }
+        .summary-table .discount-row td { color: #e63946; }
+
+        .grand-total-preview { margin-top: 20px; padding: 25px; background: linear-gradient(135deg, var(--primary), #00a4cc); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 15px; box-shadow: 0 8px 25px rgba(0,119,182,0.25); color: white; }
+        .grand-total-preview span { font-size: 18px; font-weight: 800; font-family: 'Montserrat', sans-serif; }
+        .grand-total-preview strong { font-size: 32px; font-weight: 900; white-space: nowrap; }
+
         .payment-section { grid-column: 1 / -1; margin-top: 5px; }
         .payment-title { color: var(--dark); font-size: 16px; font-weight: 700; margin-bottom: 12px; font-family: 'Montserrat', sans-serif; }
         .gcash-box { display: block; margin-top: 20px; padding: 25px; border-radius: 16px; background: linear-gradient(135deg, #effaff, #f9fdff); border: 1px solid #bfe5ee; }
@@ -121,7 +132,25 @@
         .back-btn { display: block; width: 100%; height: 52px; margin-top: 15px; padding: 15px; text-align: center; background: #f1f5f7; color: #52636d; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 700; transition: 0.3s; }
         .back-btn:hover { background: #e5ecef; color: #263b45; }
         footer { text-align: center; color: #84939b; font-size: 13px; padding: 10px 20px 40px; }
-        @media (max-width: 768px) { nav { padding: 12px 20px; flex-direction: column; gap: 15px; text-align: center; } .brand { justify-content: center; } nav .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; } .page-header { margin-top: 30px; } .page-header h1 { font-size: 30px; } .card { padding: 20px; border-radius: 15px; } .form-grid { grid-template-columns: 1fr; } .full-width, .guest-section, .facility-section, .payment-section, .note, .button-area, .grand-total-preview { grid-column: auto; } .guest-grid { grid-template-columns: 1fr; } .pool-count-grid { grid-template-columns: 1fr; } .date-grid { grid-template-columns: 1fr; } .section-heading h2 { font-size: 19px; } .gcash-row { align-items: flex-start; flex-direction: column; gap: 3px; } .entrance-header, .facility-total-preview, .accommodation-total-preview, .grand-total-preview, .selected-item { align-items: flex-start; flex-direction: column; } }
+        
+        @media (max-width: 768px) { 
+            nav { padding: 12px 20px; flex-direction: column; gap: 15px; text-align: center; } 
+            .brand { justify-content: center; } 
+            nav .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; } 
+            .page-header { margin-top: 30px; } 
+            .page-header h1 { font-size: 30px; } 
+            .card { padding: 20px; border-radius: 15px; } 
+            .form-grid { grid-template-columns: 1fr; } 
+            .full-width, .guest-section, .facility-section, .payment-section, .note, .button-area, .grand-total-preview { grid-column: auto; } 
+            .guest-grid { grid-template-columns: 1fr; } 
+            .pool-count-grid { grid-template-columns: 1fr; } 
+            .date-grid { grid-template-columns: 1fr; } 
+            .section-heading h2 { font-size: 19px; } 
+            .gcash-row { align-items: flex-start; flex-direction: column; gap: 3px; } 
+            .entrance-header, .facility-total-preview, .accommodation-total-preview, .grand-total-preview, .selected-item { align-items: flex-start; flex-direction: column; } 
+            .summary-table td, .summary-table th { font-size: 13px; padding: 10px 0; }
+            .grand-total-preview strong { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
@@ -147,7 +176,6 @@
     <h1>Complete Your Booking</h1>
     <p>Provide your details below to submit your reservation at Otirasor Beach and Resort.</p>
     
-    <!-- BAGONG TIMER BANNER -->
     <div id="hold-timer-banner" style="display: none; margin: 20px auto 0; max-width: 500px; background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 12px; font-weight: 600; color: #856404;">
         ⏳ Your slots are reserved for: <span id="hold-countdown" style="font-family: monospace; font-size: 18px; font-weight: bold; color: #d93025;">15:00</span>
     </div>
@@ -166,6 +194,7 @@
         <div class="error">{{ session('error') }}</div>
     @endif
 
+    <!-- ACCOMMODATION CARD -->
     <div class="card">
         <div class="section-heading">
             <div class="section-icon">🏡</div>
@@ -187,16 +216,13 @@
                         </li>
                     @endforeach
                 </ul>
-                <div class="accommodation-total-preview">
-                    <span>🏠 Accommodation Total</span>
-                    <strong>₱<span id="accommodation_total_preview">{{ number_format($accommodationTotal, 2) }}</span></strong>
-                </div>
             @else
                 <div class="empty">No accommodation selected.</div>
             @endif
         </div>
     </div>
 
+    <!-- DATES CARD -->
     <div class="card">
         <div class="section-heading">
             <div class="section-icon">📅</div>
@@ -219,6 +245,7 @@
         </div>
     </div>
 
+    <!-- MAIN FORM CARD -->
     <div class="card">
         <div class="section-heading">
             <div class="section-icon">👤</div>
@@ -235,6 +262,7 @@
             @endforeach
 
             <div class="form-grid">
+                <!-- 1. GUEST DETAILS -->
                 <div class="form-group">
                     <label for="guest_name">Guest Name <span class="required">*</span></label>
                     <input type="text" id="guest_name" name="guest_name" value="{{ old('guest_name') }}" placeholder="Enter guest name" required>
@@ -273,12 +301,12 @@
                     <input type="date" id="check_out" name="check_out" value="{{ old('check_out', $checkOut) }}" required>
                 </div>
 
+                <!-- 2. BEACH & SWIMMING POOL -->
                 <div class="facility-section">
                     <div class="facility-title">🏖️ Beach / Swimming Pool</div>
                     <div class="facility-box">
                         <p class="facility-description">Beach entrance is automatically included based on the number of guests. Swimming pool use is optional.</p>
                         
-                        <!-- DYNAMIC RATES SA DISPLAY -->
                         <div class="entrance-box">
                             <div class="entrance-header">
                                 <div>
@@ -319,14 +347,11 @@
                                 <div class="pool-summary-row pool-total-row"><span>Swimming Pool Total</span><strong>₱<span id="pool_total">0.00</span></strong></div>
                             </div>
                         </div>
-                        <div class="facility-total-preview">
-                            <span>🧾 Facility Total</span>
-                            <strong>₱<span id="facility_total_preview">0.00</span></strong>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Promo Code Section -->
+                <!-- 3. PROMO & REWARDS -->
+                @if($hasActivePromos)
                 <div class="payment-section" style="margin-bottom: 20px;">
                     <div class="payment-title">🎟️ Have a Promo Code?</div>
                     <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -342,8 +367,8 @@
                     </div>
                     <div id="promo_message" style="margin-top: 5px; font-size: 13px; font-weight: 600;"></div>
                 </div>
+                @endif
 
-                <!-- REWARDS SECTION -->
                 @if(auth()->check() && $userRewardPoints >= 100)
                 <div class="payment-section" style="background: #f3e8ff; border: 1px solid #d8b4fe; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                     <div class="payment-title" style="color: #6b21a8; margin-bottom: 10px;">🎁 Reward Points</div>
@@ -357,10 +382,68 @@
                 </div>
                 @endif
 
-                <div class="payment-section">
+                <!-- 4. BOOKING SUMMARY (Dito makikita ang final amount bago magbayad) -->
+                <div class="full-width" style="margin-top: 10px; background: #f8fbfd; padding: 25px; border-radius: 16px; border: 1px solid #dce8ed;">
+                    <div class="section-heading" style="margin-bottom: 15px; border-bottom: none; padding-bottom: 0;">
+                        <div class="section-icon">🧾</div>
+                        <div>
+                            <h2>Booking Summary</h2>
+                            <p>Review your total amount before proceeding to payment</p>
+                        </div>
+                    </div>
+                    
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($accommodations as $accommodation)
+                                @php $selected = $selectedAccommodations->firstWhere('name', $accommodation); @endphp
+                                <tr>
+                                    <td>🏠 {{ $accommodation }}</td>
+                                    <td>₱{{ $selected ? number_format($selected->price, 2) : '0.00' }}</td>
+                                </tr>
+                            @endforeach
+
+                            <tr>
+                                <td>🌊 Beach Entrance</td>
+                                <td>₱<span id="summary_beach_entrance">0.00</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>🏊 Swimming Pool</td>
+                                <td>₱<span id="summary_pool_total">0.00</span></td>
+                            </tr>
+
+                            <tr class="subtotal-row">
+                                <td>Subtotal</td>
+                                <td>₱<span id="summary_subtotal">0.00</span></td>
+                            </tr>
+
+                            <tr class="discount-row" id="summary_promo_row" style="display: none;">
+                                <td>🎟️ Promo Discount</td>
+                                <td>- ₱<span id="summary_promo_discount">0.00</span></td>
+                            </tr>
+                            <tr class="discount-row" id="summary_rewards_row" style="display: none;">
+                                <td>⭐ Rewards Discount</td>
+                                <td>- ₱<span id="summary_rewards_discount">0.00</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="grand-total-preview">
+                        <span>💰 Grand Total</span>
+                        <strong>₱<span id="summary_grand_total">0.00</span></strong>
+                    </div>
+                </div>
+
+                <!-- 5. GCASH PAYMENT (Huling step) -->
+                <div class="payment-section" style="margin-top: 20px;">
                     <div class="payment-title">💳 Payment Method</div>
                     
-                    {{-- GCASH ONLY HIDDEN INPUT --}}
                     <input type="hidden" name="payment_method" id="payment_method" value="GCash">
 
                     <div class="gcash-box" style="display: block;">
@@ -384,11 +467,6 @@
                     </div>
                 </div>
 
-                <div class="grand-total-preview">
-                    <span>💰 Grand Total</span>
-                    <strong>₱<span id="grand_total_preview">0.00</span></strong>
-                </div>
-
                 <div class="note">
                     <strong>Important:</strong> Your booking will be submitted as <strong>Pending</strong> and will still require manager approval before it becomes confirmed.
                 </div>
@@ -396,7 +474,6 @@
                 <div class="button-area">
                     <button type="submit" class="submit-btn">Continue Booking</button>
                     
-                    <!-- BAGONG CANCEL BUTTON -->
                     <button type="button" id="cancel-hold-btn" onclick="cancelHold()" style="display: none; width: 100%; height: 52px; margin-top: 10px; background: #fff0f0; color: #c0392b; border: 1px solid #f2b8b5; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;">
                         Cancel & Release Slot
                     </button>
@@ -413,18 +490,15 @@
 </footer>
 
 <script>
-    // ===== BASE VALUES FROM PHP (DYNAMIC NA) =====
     const accommodationTotal = {{ (float) $accommodationTotal }};
     const beachAdultRate = {{ (float) $entranceAdultFee }};
     const beachKidRate = {{ (float) $entranceChildFee }};
     const poolAdultRate = {{ (float) $swimmingAdultFee }};
     const poolKidRate = {{ (float) $swimmingChildFee }};
     
-    // Rewards
     const userRewardPoints = {{ auth()->check() ? ($userRewardPoints ?? 0) : 0 }};
     const useRewardsCheckbox = document.getElementById('use_rewards');
 
-    // ===== ELEMENTS =====
     const adultsSelect  = document.getElementById('number_of_adults');
     const kidsSelect    = document.getElementById('number_of_kids');
     const totalGuestsEl = document.getElementById('total_guests');
@@ -434,25 +508,18 @@
     const poolTotalEl      = document.getElementById('pool_total');
     const poolAdultTotalEl = document.getElementById('pool_adult_total');
     const poolKidTotalEl   = document.getElementById('pool_kid_total');
-    const facilityTotalEl  = document.getElementById('facility_total_preview');
-    const grandTotalEl     = document.getElementById('grand_total_preview');
 
     const poolCheckbox  = document.getElementById('swimming_pool');
     const poolControls  = document.getElementById('pool-controls');
     const poolAdultsSel = document.getElementById('pool_adults');
     const poolKidsSel   = document.getElementById('pool_kids');
 
-    // ===== PROMO ELEMENTS =====
     const promoInput   = document.getElementById('promo_code');
     const promoMessage = document.getElementById('promo_message');
     let appliedDiscountPercent = 0;
 
-    // ===== HELPERS =====
     function formatMoney(n) {
-        return Number(n).toLocaleString('en-PH', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        return Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function recalc() {
@@ -463,8 +530,8 @@
         if (totalGuestsEl) totalGuestsEl.textContent = total;
         if (hiddenGuests)  hiddenGuests.value = total;
 
-        const entranceTotal = (adults * beachAdultRate) + (kids * beachKidRate);
-        if (entranceTotalEl) entranceTotalEl.textContent = formatMoney(entranceTotal);
+        const beachTotal = (adults * beachAdultRate) + (kids * beachKidRate);
+        if (entranceTotalEl) entranceTotalEl.textContent = formatMoney(beachTotal);
 
         let poolAdults = 0;
         let poolKids   = 0;
@@ -481,31 +548,40 @@
         if (poolKidTotalEl)   poolKidTotalEl.textContent   = formatMoney(poolKidTotal);
         if (poolTotalEl)      poolTotalEl.textContent      = formatMoney(poolTotal);
 
-        const facilityTotal = entranceTotal + poolTotal;
-        if (facilityTotalEl) facilityTotalEl.textContent = formatMoney(facilityTotal);
-
-        const subtotal = accommodationTotal + facilityTotal;
-        
-        // Promo Discount
+        const subtotal = accommodationTotal + beachTotal + poolTotal;
         const promoDiscount = subtotal * (appliedDiscountPercent / 100);
         
-        // Rewards Discount
-        let rewardDiscount = 0;
+        let rewardsDiscount = 0;
         if (useRewardsCheckbox && useRewardsCheckbox.checked && userRewardPoints >= 100) {
-            rewardDiscount = (userRewardPoints / 100) * 5;
+            rewardsDiscount = (userRewardPoints / 100) * 5;
         }
 
-        // Cap discount para hindi lumabas na negative ang total
-        const totalDiscount = Math.min(promoDiscount + rewardDiscount, subtotal);
+        const totalDiscount = Math.min(promoDiscount + rewardsDiscount, subtotal);
         const grandTotal = subtotal - totalDiscount;
 
-        if (grandTotalEl) grandTotalEl.textContent = formatMoney(grandTotal);
+        document.getElementById('summary_beach_entrance').textContent = formatMoney(beachTotal);
+        document.getElementById('summary_pool_total').textContent = formatMoney(poolTotal);
+        document.getElementById('summary_subtotal').textContent = formatMoney(subtotal);
+        
+        if (promoDiscount > 0) {
+            document.getElementById('summary_promo_row').style.display = 'table-row';
+            document.getElementById('summary_promo_discount').textContent = formatMoney(promoDiscount);
+        } else {
+            document.getElementById('summary_promo_row').style.display = 'none';
+        }
+
+        if (rewardsDiscount > 0) {
+            document.getElementById('summary_rewards_row').style.display = 'table-row';
+            document.getElementById('summary_rewards_discount').textContent = formatMoney(rewardsDiscount);
+        } else {
+            document.getElementById('summary_rewards_row').style.display = 'none';
+        }
+
+        document.getElementById('summary_grand_total').textContent = formatMoney(grandTotal);
     }
 
-    // ===== PROMO CODE APPLY =====
     function applyPromo() {
         const code = (promoInput?.value || '').trim().toUpperCase();
-
         if (!code) {
             appliedDiscountPercent = 0;
             if (promoMessage) promoMessage.textContent = '';
@@ -541,7 +617,6 @@
             });
     }
 
-    // ===== EXISTING LISTENERS =====
     [adultsSelect, kidsSelect, poolAdultsSel, poolKidsSel].forEach(el => {
         if (el) el.addEventListener('change', recalc);
     });
@@ -559,35 +634,25 @@
         });
     }
 
-    if (useRewardsCheckbox) {
-        useRewardsCheckbox.addEventListener('change', recalc);
-    }
+    if (useRewardsCheckbox) useRewardsCheckbox.addEventListener('change', recalc);
 
-    // Initial run + auto-apply kung may default value sa page load
     recalc();
-    if (promoInput && promoInput.value.trim() !== '') {
-        applyPromo();
-    }
+    if (promoInput && promoInput.value.trim() !== '') applyPromo();
 
-    // ===== BAGONG HOLD TIMER & CANCEL LOGIC =====
     let holdTimerInterval = null;
     let currentHoldId = null;
 
     document.addEventListener('DOMContentLoaded', function() {
-        // I-check kung may active hold sa session
         fetch('/api/active-hold')
             .then(res => res.json())
             .then(data => {
                 if (data.active && data.hold) {
                     currentHoldId = data.hold.id;
-                    
-                    // Ipakita ang timer at cancel button
                     const timerBanner = document.getElementById('hold-timer-banner');
                     const cancelBtn = document.getElementById('cancel-hold-btn');
                     if (timerBanner) timerBanner.style.display = 'block';
                     if (cancelBtn) cancelBtn.style.display = 'block';
 
-                    // Simulan ang countdown
                     const expiresAt = new Date(data.hold.expires_at).getTime();
                     
                     function updateTimer() {
@@ -612,22 +677,17 @@
                         const countdownEl = document.getElementById('hold-countdown');
                         if (countdownEl) {
                             countdownEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-                            
-                            // Mag-ingay kung 1 minuto na lang
-                            if (minutes < 1) {
-                                countdownEl.style.color = "#c0392b";
-                            }
+                            if (minutes < 1) countdownEl.style.color = "#c0392b";
                         }
                     }
 
-                    updateTimer(); // Initial call
+                    updateTimer();
                     holdTimerInterval = setInterval(updateTimer, 1000);
                 }
             })
             .catch(err => console.error('Error fetching hold status:', err));
     });
 
-    // Function para i-cancel ang hold
     function cancelHold() {
         if (!currentHoldId) return;
         if (!confirm('Are you sure you want to cancel? Your slot will be released.')) return;

@@ -14,12 +14,55 @@
         body { font-family: 'Poppins', sans-serif; background: #f5f8fc; color: #243b4a; min-height: 100vh; }
         h1 { font-family: 'Montserrat', sans-serif; color: #023e8a; text-align: center; margin: 40px 0 15px; font-size: 36px; font-weight: 800; }
 
-        nav { background: #023e8a; padding: 15px 6%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-        .brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; font-weight: bold; }
-        .brand img { width: 40px; height: 40px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
-        .nav-links { display: flex; gap: 20px; }
-        nav a { color: white; text-decoration: none; font-size: 14px; font-weight: 500; }
-        nav a:hover { text-decoration: underline; }
+        /* NAVIGATION (Updated) */
+        nav { 
+            background: #023e8a; 
+            padding: 15px 6%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; font-weight: bold; font-family: 'Montserrat', sans-serif; }
+        .brand img { width: 45px; height: 45px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
+        
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        nav a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
+        nav a:hover, nav a.active { color: #fbbf24; }
+
+        /* AUTH BUTTONS */
+        .btn-nav {
+            background: #fbbf24;
+            color: #111827;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-nav:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4); }
+        
+        .btn-logout {
+            background: transparent;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
         .container { width: 1100px; max-width: 92%; margin: 0 auto 60px; }
 
@@ -41,21 +84,10 @@
             position: relative; height: 280px; transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
         }
-        .gallery-item:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-        }
-        .gallery-item img { 
-            width: 100%; height: 100%; 
-            object-fit: cover; 
-            object-position: top; /* <-- IDINAGDAG PARA MAKITA ANG MUKHA */
-            transition: transform 0.5s ease;
-        }
-        .gallery-item:hover img { 
-            transform: scale(1.08); /* Zoom effect */
-        }
+        .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.5s ease; }
+        .gallery-item:hover img { transform: scale(1.08); }
         
-        /* TRANSPARENT GRADIENT OVERLAY */
         .gallery-info {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
@@ -66,12 +98,7 @@
             justify-content: flex-end;
         }
         
-        .gallery-title { 
-            font-size: 18px; font-weight: 700; margin: 0; font-family: 'Montserrat', sans-serif; 
-            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            line-height: 1.2;
-        }
-        
+        .gallery-title { font-size: 18px; font-weight: 700; margin: 0; font-family: 'Montserrat', sans-serif; text-shadow: 0 2px 5px rgba(0,0,0,0.5); line-height: 1.2; }
         .gallery-category-badge { 
             display: inline-block; background: #0077b6; color: white; font-size: 10px; 
             padding: 4px 10px; border-radius: 20px; margin-bottom: 8px; 
@@ -81,7 +108,8 @@
         }
 
         @media (max-width: 768px) {
-            nav { flex-direction: column; gap: 10px; }
+            nav { flex-direction: column; gap: 10px; padding: 15px 20px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
             .gallery-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 500px) {
@@ -99,8 +127,21 @@
     <div class="nav-links">
         <a href="/">Home</a>
         <a href="/about">About</a>
-        <a href="/gallery">Gallery</a>
+        <a href="/gallery" class="active">Gallery</a>
+        <a href="/reviews">Reviews</a>
         <a href="/contact">Contact</a>
+
+        {{-- AUTH LOGIC --}}
+        @auth
+            <a href="/dashboard">Dashboard</a>
+            <form method="POST" action="/logout" style="display:inline; margin: 0;">
+                @csrf
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        @else
+            <a href="/login">Login</a>
+            <a href="/register" class="btn-nav">Book Now</a>
+        @endauth
     </div>
 </nav>
 
@@ -143,8 +184,6 @@
         window.Echo.channel('public.gallery')
             .listen('GalleryImageAdded', (e) => {
                 console.log('New Image Added:', e);
-                
-                // Reload the page to show the new image
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);

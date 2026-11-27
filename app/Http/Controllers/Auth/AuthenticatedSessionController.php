@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
             $userId = auth()->id();
             Auth::guard('web')->logout();
             $request->session()->put('login.id', $userId);
-            $request->session()->put('url.intended', '/my-bookings'); // <-- PALITAN ITO
+            $request->session()->put('url.intended', '/');
             return redirect('/two-factor-challenge');
         }
 
@@ -53,7 +53,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
-        return redirect()->intended('/my-bookings'); // <-- PALITAN ITO
+        return redirect()->intended('/');
     }
 
     /**

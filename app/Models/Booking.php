@@ -138,26 +138,35 @@ class Booking extends Model
     // Accommodations Accessor (Legacy Support)
     /**
      * Fallback accessor para sa accommodations attribute.
-     * Kung may laman ang pivot table, doon kukuha.
+     * Kung may laman ang pivot table, doon kukuha ng NAME at TYPE.
      * Kung wala, ibabalik ang lumang comma-separated string.
      */
     public function getAccommodationsAttribute($value)
     {
+        // Helper function para pagsamahin ang type at name
+        $formatNames = function ($accommodations) {
+            return $accommodations->map(function ($acc) {
+                // Kung may 'type' column at hindi empty, isama sa display
+                if (!empty($acc->type)) {
+                    return $acc->type . ' ' . $acc->name;
+                }
+                return $acc->name;
+            })->filter()->implode(', ');
+        };
+
         // 1. Check if relationship is already loaded
         if ($this->relationLoaded('accommodations')) {
-            $names = $this->relations['accommodations']->pluck('name')->toArray();
-
+            $names = $formatNames($this->relations['accommodations']);
             if (!empty($names)) {
-                return implode(', ', $names);
+                return $names;
             }
         }
 
-        // 2. Check if may laman ang pivot table
+        // 2. Check if may laman ang pivot table (fresh query)
         if ($this->accommodations()->exists()) {
-            $names = $this->accommodations()->pluck('name')->toArray();
-
+            $names = $formatNames($this->accommodations()->get());
             if (!empty($names)) {
-                return implode(', ', $names);
+                return $names;
             }
         }
 

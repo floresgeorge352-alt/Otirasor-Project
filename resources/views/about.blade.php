@@ -29,9 +29,40 @@
         .brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 20px; font-weight: bold; font-family: 'Montserrat', sans-serif; }
         .brand img { width: 45px; height: 45px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
         
-        .nav-links { display: flex; gap: 20px; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
         .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.3s; }
         .nav-links a:hover, .nav-links a.active { color: #fbbf24; }
+
+        /* BUTTONS FOR AUTH */
+        .btn-nav {
+            background: #fbbf24;
+            color: #111827;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-nav:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4); }
+        
+        .btn-logout {
+            background: transparent;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
         /* MAIN CONTENT */
         .container {
@@ -124,10 +155,22 @@
             <a href="/gallery">Gallery</a>
             <a href="/reviews">Reviews</a>
             <a href="/contact">Contact</a>
+
+            {{-- DITO NILAGAY ANG AUTH LOGIC --}}
+            @auth
+                <a href="/dashboard">Dashboard</a>
+                <form method="POST" action="/logout" style="display:inline; margin: 0;">
+                    @csrf
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
+            @else
+                <a href="/login">Login</a>
+                <a href="/register" class="btn-nav">Book Now</a>
+            @endauth
         </div>
     </nav>
 
-    <!-- CONTENT CARD (Deretso na agad) -->
+    <!-- CONTENT CARD -->
     <div class="container">
         <div class="content-card">
             <h2>About Otirasor Beach and Resort</h2>

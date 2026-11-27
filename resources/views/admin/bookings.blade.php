@@ -177,7 +177,7 @@
 
         .approve-btn, .approve-cancellation-btn, .approve-refund-btn,
         .reject-btn, .reject-cancellation-btn, .reject-refund-btn,
-        .verify-payment-btn, .reject-payment-btn,
+        .verify-payment-btn, .reject-payment-btn, .reopen-payment-btn,
         .confirm-reject-btn, .cancel-reject-btn,
         .checkin-btn, .checkout-btn, .complete-btn, .noshow-btn, .mark-cleaned-btn {
             padding: 10px 20px;
@@ -209,6 +209,9 @@
 
         .reject-payment-btn, .noshow-btn { background: #f97316; }
         .reject-payment-btn:hover, .noshow-btn:hover { background: #ea580c; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); transform: translateY(-1px); }
+
+        .reopen-payment-btn { background: #eab308; color: #1f2937; }
+        .reopen-payment-btn:hover { background: #ca8a04; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3); transform: translateY(-1px); }
 
         .confirm-reject-btn { background: #ef4444; }
         .confirm-reject-btn:hover { background: #dc2626; }
@@ -822,6 +825,15 @@
                             <form method="POST" action="{{ route('admin.bookings.markCleaned', $booking) }}">
                                 @csrf
                                 <button type="submit" class="mark-cleaned-btn">✓ Mark as Cleaned</button>
+                            </form>
+                        </div>
+                    @endif
+
+                    @if($booking->payment_status == 'Rejected')
+                        <div class="actions" onclick="event.stopPropagation()">
+                            <form method="POST" action="{{ route('admin.bookings.reopen-payment', $booking->id) }}" onsubmit="return confirm('Re-open this payment for verification? The customer will be asked to resubmit their proof.')">
+                                @csrf
+                                <button type="submit" class="reopen-payment-btn">🔄 Re-open Payment</button>
                             </form>
                         </div>
                     @endif

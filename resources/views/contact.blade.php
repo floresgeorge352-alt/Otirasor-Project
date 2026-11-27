@@ -7,6 +7,10 @@
 
     <title>Contact | Otirasor Beach and Resort</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -15,18 +19,22 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             background: #f4fbfd;
             color: #333;
         }
 
+        /* NAVIGATION (Updated) */
         nav {
-            background: linear-gradient(135deg, #0077b6, #0096c7);
-            padding: 12px 50px;
+            background: #023e8a;
+            padding: 15px 6%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.12);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .brand {
@@ -34,43 +42,70 @@
             align-items: center;
             gap: 12px;
             color: white;
-            font-size: 23px;
+            font-size: 18px;
             font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .brand img {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
-            border-radius: 50%;
             background: white;
-            border: 2px solid white;
+            border-radius: 50%;
+            padding: 2px;
         }
 
         .nav-links {
             display: flex;
+            gap: 20px;
             align-items: center;
-            gap: 25px;
         }
 
         nav a {
-            color: white;
+            color: rgba(255,255,255,0.8);
             text-decoration: none;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s;
         }
 
-        nav a:hover {
-            color: #dff8ff;
+        nav a:hover, nav a.active {
+            color: #fbbf24;
         }
 
-        .logout-btn {
-            background: none;
+        /* AUTH BUTTONS */
+        .btn-nav {
+            background: #fbbf24;
+            color: #111827;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
             border: none;
-            color: white;
             cursor: pointer;
-            font-size: 15px;
         }
+        .btn-nav:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4); }
+        
+        .btn-logout {
+            background: transparent;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
+        /* PAGE CONTENT */
         .page {
             max-width: 1000px;
             margin: 60px auto;
@@ -89,6 +124,7 @@
             color: #0077b6;
             font-size: 38px;
             margin-bottom: 15px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .card > p {
@@ -119,6 +155,7 @@
         .contact-box h3 {
             color: #0077b6;
             margin-bottom: 10px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .contact-box p {
@@ -127,7 +164,6 @@
         }
 
         /* CLICKABLE LOCATION */
-
         .location-link {
             display: block;
             text-decoration: none;
@@ -164,13 +200,13 @@
 
         @media (max-width: 700px) {
             nav {
-                padding: 12px 18px;
+                padding: 12px 20px;
                 flex-direction: column;
-                gap: 12px;
+                gap: 15px;
             }
 
             .brand {
-                font-size: 19px;
+                font-size: 18px;
             }
 
             .nav-links {
@@ -198,166 +234,75 @@
 <body>
 
 <nav>
-
     <div class="brand">
-
-        <img
-            src="{{ asset('images/otirasor-logo.png') }}"
-            alt="Otirasor Beach and Resort Logo"
-        >
-
-        <span>
-            Otirasor Beach and Resort
-        </span>
-
+        <img src="{{ asset('images/otirasor-logo.png') }}" alt="Otirasor Beach and Resort Logo">
+        <span>Otirasor Beach and Resort</span>
     </div>
 
     <div class="nav-links">
-
         <a href="/">Home</a>
-
         <a href="/about">About</a>
+        <a href="/gallery">Gallery</a>
+        <a href="/reviews">Reviews</a>
+        <a href="/contact" class="active">Contact</a>
 
-        <a href="/contact">Contact</a>
-
+        {{-- AUTH LOGIC --}}
         @auth
-
             <a href="/dashboard">Dashboard</a>
-
-            <form
-                method="POST"
-                action="/logout"
-                style="display:inline;"
-            >
-
+            <form method="POST" action="/logout" style="display:inline; margin: 0;">
                 @csrf
-
-                <button
-                    type="submit"
-                    class="logout-btn"
-                >
-                    Logout
-                </button>
-
+                <button type="submit" class="btn-logout">Logout</button>
             </form>
-
         @else
-
             <a href="/login">Login</a>
-
-            <a href="/register">Register</a>
-
+            <a href="/register" class="btn-nav">Book Now</a>
         @endauth
-
     </div>
-
 </nav>
 
 
 <div class="page">
-
     <div class="card">
-
-        <h1>
-            Contact Otirasor Beach and Resort
-        </h1>
+        <h1>Contact Otirasor Beach and Resort</h1>
 
         <p>
-            If you have questions about reservations,
-            accommodations, or the resort, you may
-            contact Otirasor Beach and Resort through
-            the following contact details.
+            If you have questions about reservations, accommodations, or the resort, 
+            you may contact Otirasor Beach and Resort through the following contact details.
         </p>
-
 
         <div class="contact-container">
 
-
             <!-- LOCATION -->
-
             <div class="contact-box">
-
-                <a
-                    href="https://maps.app.goo.gl/hS6jGNXAiYBQpSdCA"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="location-link"
-                >
-
-                    <div class="icon">
-                        📍
-                    </div>
-
-                    <h3>
-                        Location
-                    </h3>
-
-                    <p>
-                        Talaban, Negros Occidental,
-                        Philippines
-                    </p>
-
-                    <small class="map-text">
-                        Click to open Google Maps
-                    </small>
-
+                <a href="https://maps.app.goo.gl/hS6jGNXAiYBQpSdCA" target="_blank" rel="noopener noreferrer" class="location-link">
+                    <div class="icon">📍</div>
+                    <h3>Location</h3>
+                    <p>Talaban, Negros Occidental, Philippines</p>
+                    <small class="map-text">Click to open Google Maps</small>
                 </a>
-
             </div>
-
 
             <!-- GLOBE -->
-
             <div class="contact-box">
-
-                <div class="icon">
-                    📞
-                </div>
-
-                <h3>
-                    Globe
-                </h3>
-
-                <p>
-                    09971154140
-                </p>
-
+                <div class="icon">📞</div>
+                <h3>Globe</h3>
+                <p>09971154140</p>
             </div>
-
 
             <!-- SMART -->
-
             <div class="contact-box">
-
-                <div class="icon">
-                    📞
-                </div>
-
-                <h3>
-                    Smart
-                </h3>
-
-                <p>
-                    09089765318
-                </p>
-
+                <div class="icon">📞</div>
+                <h3>Smart</h3>
+                <p>09089765318</p>
             </div>
 
-
         </div>
-
     </div>
-
 </div>
 
 
 <footer>
-
-    <p>
-        &copy; 2026 Otirasor Beach and Resort.
-        All Rights Reserved.
-    </p>
-
+    <p>&copy; 2026 Otirasor Beach and Resort. All Rights Reserved.</p>
 </footer>
 
 </body>

@@ -14,43 +14,83 @@ use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 
 class TwoFactorController extends Controller
 {
+    /**
+     * Display the two-factor authentication page.
+     */
     public function index(Request $request): View
     {
-        return view('profile.two-factor', ['user' => $request->user()]);
+        return view('profile.two-factor', [
+            'user' => $request->user(),
+        ]);
     }
 
-    public function enable(Request $request, EnableTwoFactorAuthentication $enable): RedirectResponse
-    {
+    /**
+     * Enable two-factor authentication.
+     */
+    public function enable(
+        Request $request,
+        EnableTwoFactorAuthentication $enable
+    ): RedirectResponse {
         $enable($request->user());
 
-        return back()->with('success', 'Two-factor authentication has been enabled. Please confirm by entering a code.');
+        return back()
+            ->with('success', 'Two-factor authentication setup started. Please confirm using your authenticator app.')
+            ->with('tab', 'security');
     }
 
-    public function confirm(Request $request, ConfirmTwoFactorAuthentication $confirm): RedirectResponse
-    {
-        $request->validate(['code' => 'required|string']);
+    /**
+     * Confirm two-factor authentication.
+     */
+    public function confirm(
+        Request $request,
+        ConfirmTwoFactorAuthentication $confirm
+    ): RedirectResponse {
+        $request->validate([
+            'code' => ['required', 'string'],
+        ]);
 
         $confirm($request->user(), $request->input('code'));
 
-        return back()->with('success', 'Two-factor authentication is now fully enabled.');
+        return back()
+            ->with('success', 'Two-factor authentication is now fully enabled.')
+            ->with('tab', 'security');
     }
 
+    /**
+     * Display recovery codes.
+     */
     public function showRecoveryCodes(Request $request): View
     {
-        return view('profile.recovery-codes', ['user' => $request->user()]);
+        return view('profile.recovery-codes', [
+            'user' => $request->user(),
+        ]);
     }
 
-    public function regenerateRecoveryCodes(Request $request, GenerateNewRecoveryCodes $generate): RedirectResponse
-    {
+    /**
+     * Regenerate two-factor recovery codes.
+     */
+    public function regenerateRecoveryCodes(
+        Request $request,
+        GenerateNewRecoveryCodes $generate
+    ): RedirectResponse {
         $generate($request->user());
 
-        return back()->with('success', 'Recovery codes regenerated.');
+        return back()
+            ->with('success', 'Recovery codes regenerated successfully.')
+            ->with('tab', 'security');
     }
 
-    public function disable(Request $request, DisableTwoFactorAuthentication $disable): RedirectResponse
-    {
+    /**
+     * Disable two-factor authentication.
+     */
+    public function disable(
+        Request $request,
+        DisableTwoFactorAuthentication $disable
+    ): RedirectResponse {
         $disable($request->user());
 
-        return back()->with('success', 'Two-factor authentication has been disabled.');
+        return back()
+            ->with('success', 'Two-factor authentication has been disabled.')
+            ->with('tab', 'security');
     }
 }
